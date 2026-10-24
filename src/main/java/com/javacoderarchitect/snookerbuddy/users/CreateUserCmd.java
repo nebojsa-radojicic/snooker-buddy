@@ -1,0 +1,3 @@
+package com.javacoderarchitect.snookerbuddy.users;
+
+record CreateUserCmd(String name, String email, String password, Role role) {}
