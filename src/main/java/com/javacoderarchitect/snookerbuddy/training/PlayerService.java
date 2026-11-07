@@ -1,5 +1,6 @@
 package com.javacoderarchitect.snookerbuddy.training;
 
+import com.javacoderarchitect.snookerbuddy.users.Role;
 import com.javacoderarchitect.snookerbuddy.users.UserDto;
 import com.javacoderarchitect.snookerbuddy.users.UsersAPI;
 import java.util.List;
@@ -18,6 +19,7 @@ class PlayerService {
 
     @Transactional(readOnly = true)
     public List<UserDto> players(Long coachId) {
+        users.requireRole(coachId, Role.ROLE_COACH);
         return repository.findByCoachIdOrderByCreatedAtAsc(coachId).stream()
                 .map(link -> users.findById(link.getPlayerId()).orElseThrow())
                 .toList();
@@ -25,8 +27,11 @@ class PlayerService {
 
     @Transactional
     public void add(Long coachId, String email) {
+        users.requireRole(coachId, Role.ROLE_COACH);
         var player = users.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("No account found. Ask the player to register first."));
+        if (!player.hasRole(Role.ROLE_PLAYER))
+            throw new IllegalArgumentException("This account does not have the player role.");
         if (player.id().equals(coachId)) throw new IllegalArgumentException("Choose a player other than yourself.");
         var existing = repository.findById(player.id());
         if (existing.isPresent()) {

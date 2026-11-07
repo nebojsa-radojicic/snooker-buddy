@@ -34,6 +34,13 @@
                            th:attr="aria-invalid=${#fields.hasErrors('password')},aria-describedby=${#fields.hasErrors('password')} ? 'password-error' : null" placeholder="Choose a password"/>
                     <p id="password-error" class="validation-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Password error</p>
                 </div>
+                <fieldset>
+                    <legend class="field-label">How will you use Snooker Buddy?</legend>
+                    <label class="block mt-2"><input type="checkbox" th:field="*{coach}"/> Coach</label>
+                    <label class="block mt-2"><input type="checkbox" th:field="*{player}"/> Player</label>
+                    <p class="page-subtitle">Choose one or both roles.</p>
+                    <p class="validation-error" th:if="${#fields.hasErrors('roleSelected')}" th:errors="*{roleSelected}"></p>
+                </fieldset>
                 <button type="submit" class="btn btn-primary w-full">Create account <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
             </form>
             <p class="auth-footer">Already have an account? <a class="text-link" th:href="@{/login}">Sign in</a></p>

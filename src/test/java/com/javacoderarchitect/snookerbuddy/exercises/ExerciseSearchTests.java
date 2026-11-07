@@ -29,7 +29,7 @@ class ExerciseSearchTests extends BaseIT {
     }
 
     private SecurityUser coach() {
-        return new SecurityUser(1L, "Coach", "coach@example.com", "unused", Role.ROLE_USER);
+        return new SecurityUser(1L, "Coach", "coach@example.com", "unused", Role.ROLE_COACH);
     }
 
     static Stream<Arguments> filters() {

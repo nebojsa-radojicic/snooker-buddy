@@ -32,7 +32,7 @@ class ExerciseTests extends BaseIT {
     }
 
     private SecurityUser coach(long id) {
-        return new SecurityUser(id, "Coach", "coach@example.com", "unused", Role.ROLE_USER);
+        return new SecurityUser(id, "Coach", "coach@example.com", "unused", Role.ROLE_COACH);
     }
 
     private MockMultipartFile photo() throws Exception {

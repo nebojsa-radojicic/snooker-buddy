@@ -1,5 +1,7 @@
 package com.javacoderarchitect.snookerbuddy.exercises;
 
+import com.javacoderarchitect.snookerbuddy.users.Role;
+import com.javacoderarchitect.snookerbuddy.users.UsersAPI;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -12,7 +14,10 @@ public class ExercisesAPI {
     private final ExerciseService service;
     private final ExerciseRepository repository;
 
-    ExercisesAPI(ExerciseService service, ExerciseRepository repository) {
+    private final UsersAPI users;
+
+    ExercisesAPI(ExerciseService service, ExerciseRepository repository, UsersAPI users) {
+        this.users = users;
         this.service = service;
         this.repository = repository;
     }
@@ -22,6 +27,7 @@ public class ExercisesAPI {
     }
 
     public List<ExerciseDto> selected(Long ownerId, List<Long> ids) {
+        users.requireRole(ownerId, Role.ROLE_COACH);
         if (ids.isEmpty()) return List.of();
         var found = repository.findOwned(ownerId, ids).stream()
                 .collect(java.util.stream.Collectors.toMap(ExerciseDto::id, e -> e));

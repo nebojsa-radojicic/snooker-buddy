@@ -32,7 +32,7 @@ class UserService {
         user.setName(cmd.name());
         user.setEmail(cmd.email());
         user.setPassword(passwordEncoder.encode(cmd.password()));
-        user.setRole(cmd.role());
+        user.setRoles(cmd.roles());
         user.setCreatedAt(Instant.now());
         userRepository.save(user);
     }
@@ -44,6 +44,6 @@ class UserService {
     }
 
     private UserDto toUserDto(UserEntity user) {
-        return new UserDto(user.getId(), user.getName(), user.getEmail(), user.getRole(), user.getCreatedAt());
+        return new UserDto(user.getId(), user.getName(), user.getEmail(), user.getRoles(), user.getCreatedAt());
     }
 }

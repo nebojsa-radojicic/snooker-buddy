@@ -1,6 +1,7 @@
 package com.javacoderarchitect.snookerbuddy.config;
 
 import com.javacoderarchitect.snookerbuddy.shared.ResourceNotFoundException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -24,6 +25,7 @@ class GlobalExceptionHandler {
         modelAndView.addObject("message", e.getMessage());
         modelAndView.addObject("exception", e);
         modelAndView.setViewName("error/403");
+        modelAndView.setStatus(HttpStatus.FORBIDDEN);
         return modelAndView;
     }
 

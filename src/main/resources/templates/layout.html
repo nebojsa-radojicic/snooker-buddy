@@ -28,9 +28,10 @@
         <a sec:authorize="isAuthenticated()" th:href="@{/}" class="navitem">
             <i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> Your workspace
         </a>
-        <a sec:authorize="isAuthenticated()" th:href="@{/exercises}" class="navitem"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> Exercise library</a>
-        <a sec:authorize="isAuthenticated()" th:href="@{/training}" class="navitem"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i> Training plans</a>
-        <a sec:authorize="isAuthenticated()" th:href="@{/players}" class="navitem"><i class="fa-solid fa-users" aria-hidden="true"></i> My players</a>
+        <a sec:authorize="hasRole('COACH')" th:href="@{/exercises}" class="navitem"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> Exercise library</a>
+        <a sec:authorize="hasAnyRole('COACH', 'PLAYER')" th:href="@{/training}" class="navitem"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i> Training plans</a>
+        <a sec:authorize="hasRole('COACH')" th:href="@{/players}" class="navitem"><i class="fa-solid fa-users" aria-hidden="true"></i> My players</a>
+        <a sec:authorize="hasAnyRole('COACH', 'PLAYER')" th:href="@{/scores}" class="navitem"><i class="fa-solid fa-bullseye" aria-hidden="true"></i> Scores</a>
         <th:block sec:authorize="isAnonymous()">
             <a th:href="@{/login}" class="navitem"><i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> Sign in</a>
             <a th:href="@{/registration}" class="navitem"><i class="fa-solid fa-user-plus" aria-hidden="true"></i> Create account</a>

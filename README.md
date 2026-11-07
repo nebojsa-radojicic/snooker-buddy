@@ -60,3 +60,32 @@ from **Training plans**. Players only gain access to exercises included in their
 plans. Each player can be linked to one coach; assignment and roster changes
 require sign-in and CSRF protection. Migration `V003` persists the roster and plans
 in PostgreSQL. Result recording is a separate workflow.
+
+### Coach/player access and basic scores (UC-001)
+
+Registration supports **Coach**, **Player**, or both roles. A dual-role account can
+coach several players while training under its own single coach. Coach tools
+(library, roster, and assignment creation) require the coach role. Players open
+assigned drawings through their training plans; no access to their coach's other
+private drawings is granted. Administrator status alone does not grant coach or
+player access.
+
+Migration `V004` replaces the single authority column with `user_roles`, preserving
+legacy authorities and inferring coach/player roles from existing exercise
+ownership and roster links. Existing accounts with no such records retain only
+their previous authority; the migration does not grant them business privileges.
+
+Migration `V005` stores basic exercise scores. **Scores** (`/scores`) lists the
+signed-in player's scores and scores for players they coach. Direct reads at
+`GET /scores/{id}` return JSON; inaccessible or unknown scores return 404. Counts,
+player, exercise, plan, and recording timestamp are included.
+
+The basic storage endpoint is
+`POST /training/{planId}/exercises/{exerciseId}/scores` with JSON
+`{"total":10,"successful":7}`. It requires an authenticated session and CSRF token;
+only the coach can submit joint practice, and only the assigned player can submit
+independent practice. Invalid counts return 400. Scores must reference an exercise
+in that plan. A successful write returns 201 with the score and a `Location`
+header. This endpoint is the storage foundation; detailed result-entry screens,
+attempt-by-attempt entry, and optional performance measures belong to later use
+cases.

@@ -1,0 +1,129 @@
+package com.javacoderarchitect.snookerbuddy.training;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import com.javacoderarchitect.snookerbuddy.ApplicationProperties;
+import com.javacoderarchitect.snookerbuddy.config.WebSecurityConfig;
+import com.javacoderarchitect.snookerbuddy.users.Role;
+import com.javacoderarchitect.snookerbuddy.users.SecurityUser;
+import java.time.Instant;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.server.ResponseStatusException;
+
+@WebMvcTest(ScoreController.class)
+@Import(WebSecurityConfig.class)
+@EnableConfigurationProperties(ApplicationProperties.class)
+class ScoreControllerTests {
+    private final MockMvc mvc;
+
+    @MockitoBean
+    private ScoreService service;
+
+    @Autowired
+    ScoreControllerTests(MockMvc mvc) {
+        this.mvc = mvc;
+    }
+
+    private SecurityUser player() {
+        return new SecurityUser(2L, "Player", "player@example.com", "unused", Role.ROLE_PLAYER);
+    }
+
+    private ScoreDto score() {
+        return new ScoreDto(9L, 3L, 7L, 2L, "Player", "Pot", 10, 8, Instant.parse("2026-11-07T12:00:00Z"));
+    }
+
+    @Test
+    void storesCountsForTheAuthenticatedIdentityAndReturnsLocation() throws Exception {
+        when(service.save(2L, 3L, 7L, new CreateScoreCmd(10, 8))).thenReturn(score());
+        mvc.perform(post("/training/3/exercises/7/scores")
+                        .with(user(player()))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"total\":10,\"successful\":8,\"playerId\":4}"))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", "/scores/9"))
+                .andExpect(jsonPath("$.playerId").value(2))
+                .andExpect(jsonPath("$.successful").value(8));
+    }
+
+    @Test
+    void rendersAuthorizedScoresAndSupportsDirectReads() throws Exception {
+        when(service.scores(2L)).thenReturn(List.of(score()));
+        when(service.score(2L, 9L)).thenReturn(score());
+        mvc.perform(get("/scores").with(user(player())))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("8 / 10")));
+        mvc.perform(get("/scores/9").with(user(player())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exerciseId").value(7))
+                .andExpect(header().string("Cache-Control", "no-store"));
+    }
+
+    @Test
+    void inaccessibleAndMissingScoresBothReturnNotFound() throws Exception {
+        when(service.score(2L, 9L)).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
+        mvc.perform(get("/scores/9").with(user(player()))).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void refusesForbiddenWritesWithTheCorrectHttpStatus() throws Exception {
+        when(service.save(2L, 3L, 7L, new CreateScoreCmd(10, 8))).thenThrow(new AccessDeniedException("Forbidden"));
+        mvc.perform(post("/training/3/exercises/7/scores")
+                        .with(user(player()))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"total\":10,\"successful\":8}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"{}", "{\"total\":0,\"successful\":0}", "{\"total\":10,\"successful\":11}", "not json"})
+    void invalidInputReturnsBadRequestWithoutCallingStorage(String body) throws Exception {
+        mvc.perform(post("/training/3/exercises/7/scores")
+                        .with(user(player()))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void requiresSignInBusinessRolesAndCsrf() throws Exception {
+        mvc.perform(get("/scores")).andExpect(status().is3xxRedirection());
+        mvc.perform(get("/scores/9")
+                        .with(user(new SecurityUser(1L, "Admin", "admin@example.com", "unused", Role.ROLE_ADMIN))))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/training/3/exercises/7/scores")
+                        .with(user(player()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"total\":10,\"successful\":8}"))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void playerRoleCannotReachCoachEndpointsEvenWithCsrf() throws Exception {
+        for (String path : List.of("/exercises", "/players", "/training/new")) {
+            mvc.perform(get(path).with(user(player()))).andExpect(status().isForbidden());
+        }
+        mvc.perform(post("/training").with(user(player())).with(csrf())).andExpect(status().isForbidden());
+        verifyNoInteractions(service);
+    }
+}

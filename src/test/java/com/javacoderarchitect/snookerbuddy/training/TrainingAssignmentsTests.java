@@ -32,7 +32,7 @@ class TrainingAssignmentsTests extends BaseIT {
     }
 
     private SecurityUser account(long id) {
-        return new SecurityUser(id, "Account", "account@example.com", "unused", Role.ROLE_USER);
+        return new SecurityUser(id, "Account", "account@example.com", "unused", Role.ROLE_COACH, Role.ROLE_PLAYER);
     }
 
     private MockHttpServletRequestBuilder assignment(String player, String format, String... ids) {

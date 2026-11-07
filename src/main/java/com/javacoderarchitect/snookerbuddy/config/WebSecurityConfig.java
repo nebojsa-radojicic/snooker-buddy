@@ -2,6 +2,7 @@ package com.javacoderarchitect.snookerbuddy.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -9,7 +10,7 @@ import org.springframework.security.web.servlet.util.matcher.PathPatternRequestM
 
 @Configuration
 @EnableWebSecurity
-class WebSecurityConfig {
+public class WebSecurityConfig {
     private static final String[] PUBLIC_RESOURCES = {
         "/css/**",
         "/js/**",
@@ -34,6 +35,12 @@ class WebSecurityConfig {
                 .permitAll()
                 .requestMatchers(unsecuredPaths)
                 .permitAll()
+                .requestMatchers("/exercises/**", "/players/**", "/training/new")
+                .hasRole("COACH")
+                .requestMatchers(HttpMethod.POST, "/training")
+                .hasRole("COACH")
+                .requestMatchers("/training/**", "/scores/**")
+                .hasAnyRole("COACH", "PLAYER")
                 .anyRequest()
                 .authenticated());
 

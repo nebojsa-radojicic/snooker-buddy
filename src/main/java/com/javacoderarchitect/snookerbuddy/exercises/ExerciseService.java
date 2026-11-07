@@ -1,5 +1,7 @@
 package com.javacoderarchitect.snookerbuddy.exercises;
 
+import com.javacoderarchitect.snookerbuddy.users.Role;
+import com.javacoderarchitect.snookerbuddy.users.UsersAPI;
 import java.io.IOException;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -11,18 +13,23 @@ import org.springframework.web.server.ResponseStatusException;
 class ExerciseService {
     private final ExerciseRepository repository;
 
-    ExerciseService(ExerciseRepository repository) {
+    private final UsersAPI users;
+
+    ExerciseService(ExerciseRepository repository, UsersAPI users) {
         this.repository = repository;
+        this.users = users;
     }
 
     @Transactional(readOnly = true)
     public List<ExerciseDto> findLibrary(Long ownerId, String query, Difficulty difficulty, ExerciseType type) {
+        users.requireRole(ownerId, Role.ROLE_COACH);
         String search = query.strip().toLowerCase(java.util.Locale.ROOT);
         return repository.findLibrary(ownerId, search, difficulty, type);
     }
 
     @Transactional
     public Long create(Long ownerId, CreateExerciseCmd cmd) {
+        users.requireRole(ownerId, Role.ROLE_COACH);
         var file = cmd.drawing();
         if (file == null || file.isEmpty()) throw new IllegalArgumentException("Upload your exercise drawing.");
         if (file.getSize() > DrawingService.MAX_BYTES)
@@ -49,6 +56,7 @@ class ExerciseService {
     }
 
     private ExerciseEntity owned(Long ownerId, Long id) {
+        users.requireRole(ownerId, Role.ROLE_COACH);
         return repository
                 .findByIdAndOwnerId(id, ownerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exercise not found"));

@@ -36,7 +36,7 @@ class ExerciseUploadAdviceTests {
     @Test
     void oversizedUploadRendersAnActionableFormWithAllChoices() throws Exception {
         when(service.create(any(), any())).thenThrow(new MaxUploadSizeExceededException(DrawingService.MAX_BYTES));
-        var principal = new SecurityUser(1L, "Coach", "coach@example.com", "unused", Role.ROLE_USER);
+        var principal = new SecurityUser(1L, "Coach", "coach@example.com", "unused", Role.ROLE_COACH);
         mvc.perform(multipart("/exercises")
                         .file(new MockMultipartFile("drawing", "drawing.png", "image/png", new byte[] {1}))
                         .with(user(principal))

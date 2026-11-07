@@ -1,8 +1,10 @@
 package com.javacoderarchitect.snookerbuddy.users;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import java.util.HashSet;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -26,7 +28,7 @@ class UserController {
 
     @GetMapping("/registration")
     String registrationForm(Model model) {
-        model.addAttribute("user", new UserRegistrationForm("", "", ""));
+        model.addAttribute("user", new UserRegistrationForm("", "", "", false, false));
         return "registration";
     }
 
@@ -39,11 +41,11 @@ class UserController {
             return "registration";
         }
         try {
+            var roles = new HashSet<Role>();
+            if (userRegistrationForm.coach()) roles.add(Role.ROLE_COACH);
+            if (userRegistrationForm.player()) roles.add(Role.ROLE_PLAYER);
             var cmd = new CreateUserCmd(
-                    userRegistrationForm.name(),
-                    userRegistrationForm.email(),
-                    userRegistrationForm.password(),
-                    Role.ROLE_USER);
+                    userRegistrationForm.name(), userRegistrationForm.email(), userRegistrationForm.password(), roles);
             userService.createUser(cmd);
             redirectAttributes.addFlashAttribute("successMessage", "Registration successful! Please login.");
             return "redirect:/login";
@@ -59,5 +61,17 @@ class UserController {
             @NotBlank(message = "Email is required") @Email(message = "Invalid email address")
             String email,
 
-            @NotBlank(message = "Password is required") String password) {}
+            @NotBlank(message = "Password is required") String password,
+            Boolean coach,
+            Boolean player) {
+        public UserRegistrationForm {
+            coach = Boolean.TRUE.equals(coach);
+            player = Boolean.TRUE.equals(player);
+        }
+
+        @AssertTrue(message = "Choose coach, player, or both")
+        public boolean isRoleSelected() {
+            return coach || player;
+        }
+    }
 }

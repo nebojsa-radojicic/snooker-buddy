@@ -3,6 +3,7 @@ package com.javacoderarchitect.snookerbuddy.training;
 import com.javacoderarchitect.snookerbuddy.exercises.ExerciseDrawingDto;
 import com.javacoderarchitect.snookerbuddy.exercises.ExerciseDto;
 import com.javacoderarchitect.snookerbuddy.exercises.ExercisesAPI;
+import com.javacoderarchitect.snookerbuddy.users.Role;
 import com.javacoderarchitect.snookerbuddy.users.UsersAPI;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -29,6 +30,8 @@ class TrainingService {
 
     @Transactional
     public List<Long> assign(Long coachId, @Valid CreateAssignmentCmd cmd) {
+        users.requireRole(coachId, Role.ROLE_COACH);
+        users.requireRole(cmd.playerId(), Role.ROLE_PLAYER);
         if (!players.isPlayer(coachId, cmd.playerId()))
             throw new IllegalArgumentException("Choose a player from your list.");
         if (cmd.exerciseIds().stream().distinct().count() != cmd.exerciseIds().size())
@@ -68,6 +71,7 @@ class TrainingService {
     @Transactional(readOnly = true)
     public List<TrainingPlanDto> plans(Long userId) {
         return repository.findByCoachIdOrPlayerIdOrderByCreatedAtDescIdDesc(userId, userId).stream()
+                .filter(plan -> canAccess(userId, plan))
                 .map(this::dto)
                 .toList();
     }
@@ -88,18 +92,21 @@ class TrainingService {
         return exercises.drawing(containing(userId, planId, exerciseId).getCoachId(), exerciseId);
     }
 
-    private TrainingPlanEntity containing(Long userId, Long id, Long exerciseId) {
+    TrainingPlanEntity containing(Long userId, Long id, Long exerciseId) {
         var plan = accessible(userId, id);
         if (!plan.getExerciseIds().contains(exerciseId)) throw missing();
         return plan;
     }
 
     private TrainingPlanEntity accessible(Long userId, Long id) {
-        return repository
-                .findById(id)
-                .filter(plan ->
-                        plan.getCoachId().equals(userId) || plan.getPlayerId().equals(userId))
-                .orElseThrow(this::missing);
+        return repository.findById(id).filter(plan -> canAccess(userId, plan)).orElseThrow(this::missing);
+    }
+
+    private boolean canAccess(Long userId, TrainingPlanEntity plan) {
+        return (plan.getCoachId().equals(userId)
+                        && users.hasRole(userId, Role.ROLE_COACH)
+                        && players.isPlayer(userId, plan.getPlayerId()))
+                || (plan.getPlayerId().equals(userId) && users.hasRole(userId, Role.ROLE_PLAYER));
     }
 
     private ResponseStatusException missing() {
