@@ -4,6 +4,7 @@ import static com.tngtech.archunit.core.domain.JavaModifier.*;
 
 import com.enofex.taikai.Taikai;
 import com.enofex.taikai.java.ImportsConfigurer;
+import com.tngtech.archunit.core.domain.JavaClass;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -24,9 +25,11 @@ class ArchUnitTests {
                                 .interfacesShouldNotHavePrefixI()))
                 .logging(logging ->
                         logging.loggersShouldFollowConventions(Logger.class, "LOG", List.of(PRIVATE, STATIC, FINAL)))
-                .test(test -> test.junit(junit -> junit.classesShouldBePackagePrivate(".*Test(s)")
-                        .classesShouldNotBeAnnotatedWithDisabled()
-                        .methodsShouldNotBeAnnotatedWithDisabled()))
+                .test(test -> test.junit(
+                        junit -> junit.classesShouldBePackagePrivate(JavaClass.Predicates.simpleNameEndingWith("Tests")
+                                        .or(JavaClass.Predicates.simpleNameEndingWith("Test")))
+                                .classesShouldNotBeAnnotatedWithDisabled()
+                                .methodsShouldNotBeAnnotatedWithDisabled()))
                 .spring(spring -> spring.noAutowiredFields()
                         .boot(boot -> boot.applicationClassShouldResideInPackage(BASE_PACKAGE))
                         .configurations(c -> c.namesShouldMatch(".+Config"))

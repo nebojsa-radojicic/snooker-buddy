@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Exercise details</title></head>
+<body>
+<span layout:fragment="pageTitle">Exercise library</span>
+<div layout:fragment="content"><section class="panel exercise-form-panel"><a class="text-link" th:href="@{/exercises}">← Back to library</a><h1 class="page-title mt-5" th:text="${exercise.name}"></h1><img class="detail-drawing" th:src="@{/exercises/{id}/drawing(id=${exercise.id})}" th:alt="${'Drawing for ' + exercise.name}"/><div class="flex gap-2 mt-5"><span class="chip" th:text="${exercise.type.label}"></span><span class="chip" th:text="${exercise.difficulty.label}"></span></div><h2 class="font-bold mt-6">How to practice</h2><p class="page-subtitle exercise-text" th:text="${exercise.description}"></p><h2 class="font-bold mt-6">What counts as success</h2><p class="page-subtitle exercise-text" th:text="${exercise.goal}"></p><a class="btn btn-primary mt-6" th:href="@{/training/new(exercise=${exercise.id})}">Assign to a player →</a></section></div>
+</body></html>

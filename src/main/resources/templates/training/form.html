@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Assign training</title></head><body>
+<span layout:fragment="pageTitle">Training plans</span>
+<div layout:fragment="content">
+<section class="panel exercise-form-panel">
+<div class="library-heading"><div><h1 class="page-title">Assign training</h1><p class="page-subtitle">Give your player a clear next step.</p></div><a class="iconbtn" th:href="@{/training}" aria-label="Back to training plans">×</a></div>
+<div th:if="${players.isEmpty()}" class="notice"><p>Add a player before assigning training. <a class="text-link" th:href="@{/players}">Add a player</a></p></div>
+<div th:if="${exercises.isEmpty()}" class="notice"><p>Save an exercise before assigning training. <a class="text-link" th:href="@{/exercises/new}">New exercise</a></p></div>
+<form method="post" th:action="@{/training}" th:object="${assignment}" class="space-y-5" id="assignment-form">
+<div class="notice notice-error" role="alert" th:if="${#fields.hasAnyErrors()}"><ul><li th:each="error : ${#fields.allErrors()}" th:text="${error}"></li></ul></div>
+<div><label class="field-label" for="playerId">Player</label><select class="field" th:field="*{playerId}" required><option value="">Choose a player</option><option th:each="player : ${players}" th:value="${player.id}" th:text="${player.name}"></option></select><a class="text-link text-xs inline-block mt-2" th:href="@{/players}">Manage players</a></div>
+<div><label class="field-label" for="name">Training name <span class="font-normal text-[#8b9582]">(optional)</span></label><input class="field" th:field="*{name}" maxlength="120" placeholder="e.g. Cue-ball control practice"/><p class="text-xs text-[#66745e] mt-2">Grouped sessions use this name. Individual assignments use each exercise's name.</p></div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label class="field-label" for="format">Assignment</label><select class="field" th:field="*{format}" required><option th:each="item : ${formats}" th:value="${item}" th:text="${item.label}"></option></select></div><div><label class="field-label" for="kind">Session type</label><select class="field" th:field="*{kind}" required><option th:each="item : ${kinds}" th:value="${item}" th:text="${item.label}"></option></select></div></div>
+<fieldset><legend class="field-label">Exercises</legend><div class="assignment-exercises"><label class="assignment-option" th:each="exercise : ${exercises}"><input type="checkbox" th:field="*{exerciseIds}" th:value="${exercise.id}"/><span class="flex-1" th:text="${exercise.name}"></span><span class="chip" th:text="${exercise.type.label}"></span></label><p class="p-4 text-xs text-[#66745e]" th:if="${exercises.isEmpty()}">Your library is empty.</p></div><p class="text-xs text-[#66745e] mt-2">Choose one exercise or group several into a training session.</p></fieldset>
+<label class="flex items-center gap-2 text-xs"><input type="checkbox" id="customTargets" th:field="*{customTargets}" aria-controls="custom-targets"/> Customize the targets for this player</label>
+<div id="custom-targets"><div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label class="field-label" for="attempts">Attempts per exercise</label><input class="field" type="number" th:field="*{attempts}" min="1" max="1000"/></div><div><label class="field-label" for="target">Success target</label><input class="field" type="number" th:field="*{target}" min="1" max="1000"/></div></div><p class="text-xs text-[#66745e] mt-2">These targets apply to all selected exercises when customization is selected.</p></div>
+<p class="text-xs text-[#66745e]">Default target: 8 successful attempts out of 10 per exercise.</p>
+<div class="flex flex-wrap justify-end gap-3 pt-2"><a class="btn btn-light" th:href="@{/training}">Cancel</a><button class="btn btn-primary" th:disabled="${players.isEmpty() or exercises.isEmpty()}">Assign training →</button></div>
+</form></section>
+</div>
+<th:block layout:fragment="pageScripts"><script defer th:src="@{/js/training.js}"></script></th:block>
+</body></html>

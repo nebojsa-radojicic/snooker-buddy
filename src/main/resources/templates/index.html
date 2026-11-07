@@ -1,12 +1,42 @@
 <!DOCTYPE html>
-<html lang="en"
-      xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout}">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Your workspace</title></head>
 <body>
+<span layout:fragment="pageTitle">Your workspace</span>
 <div layout:fragment="content">
-    <h1>Welcome</h1>
+    <div class="mb-7">
+        <p class="eyebrow mb-3">YOUR COACHING COMPANION</p>
+        <h1 class="page-title">Welcome to Snooker Buddy.</h1>
+        <p class="page-subtitle" sec:authorize="isAuthenticated()">Good to see you, <span class="font-semibold text-[#263526]" sec:authentication="principal.name">User name</span>. Make your next session count.</p>
+    </div>
+    <section class="hero" aria-labelledby="practice-title">
+        <img class="hero-photo" src="https://images.unsplash.com/photo-1760903192559-17dc111d31e3?auto=format&amp;fit=crop&amp;w=1000&amp;q=85" alt="A green snooker table ready for practice"/>
+        <div class="hero-shade" aria-hidden="true"></div>
+        <div class="hero-copy">
+            <p class="eyebrow mb-3">LESS ADMIN. MORE TIME AT THE TABLE.</p>
+            <h2 id="practice-title" class="text-[26px] md:text-[30px] font-extrabold leading-tight tracking-tight">Good practice starts<br/>with a clear plan.</h2>
+            <p class="text-sm text-[#526b41] leading-7 mt-4 max-w-[310px]">A little focus today. A little more confidence tomorrow. One exercise at a time.</p>
+        </div>
+        <a class="hero-credit" href="https://unsplash.com/photos/_w189E1ebDc" target="_blank" rel="noopener noreferrer">Photo: Prabal Kumar / Unsplash ↗</a>
+    </section>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-6">
+        <section class="panel p-6">
+            <span class="feature-icon"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></span>
+            <h2 class="font-bold text-base mt-4"><a th:href="@{/exercises}">A home for your exercises →</a></h2>
+            <p class="page-subtitle">Clear drawings and simple instructions give every exercise a purpose.</p>
+        </section>
+        <section class="panel p-6">
+            <span class="feature-icon"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></span>
+            <h2 class="font-bold text-base mt-4">Practice with a plan</h2>
+            <p class="page-subtitle">Focused sessions start with knowing what to work on next.</p>
+        </section>
+        <section class="panel p-6">
+            <span class="feature-icon"><i class="fa-solid fa-bullseye" aria-hidden="true"></i></span>
+            <h2 class="font-bold text-base mt-4">Make every attempt count</h2>
+            <p class="page-subtitle">Take time to reflect on each session and prepare for the next.</p>
+        </section>
+    </div>
 </div>
 </body>
 </html>

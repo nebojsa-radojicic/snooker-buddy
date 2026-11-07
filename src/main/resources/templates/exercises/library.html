@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Exercise library</title></head>
+<body>
+<span layout:fragment="pageTitle">Exercise library</span>
+<div layout:fragment="content">
+<div class="library-heading"><div><h1 class="page-title">Your exercise library</h1><p class="page-subtitle">A little structure. A lot of progress. All your exercises, in one place.</p></div><a class="btn btn-primary" th:href="@{/exercises/new}"><i class="fa-solid fa-plus" aria-hidden="true"></i> New exercise</a></div>
+<section class="hero mb-6">
+<img class="hero-photo" src="https://images.unsplash.com/photo-1760903192559-17dc111d31e3?auto=format&amp;fit=crop&amp;w=1000&amp;q=85" alt="Snooker balls and rack on a green table"/>
+<div class="hero-shade" aria-hidden="true"></div><div class="hero-copy"><p class="eyebrow mb-3">LESS ADMIN. MORE TIME AT THE TABLE.</p><h2 class="text-[26px] font-extrabold leading-tight">Good practice starts<br/>with a clear plan.</h2><p class="page-subtitle max-w-[310px]">Keep your exercises close and your players moving forward. One purposeful session at a time.</p></div>
+<a class="hero-credit" href="https://unsplash.com/photos/_w189E1ebDc" target="_blank" rel="noopener noreferrer">Photo: Prabal Kumar / Unsplash ↗</a></section>
+<section id="exercise-library" aria-label="Find exercises"
+         hx-target="#exercise-library" hx-select="#exercise-library" hx-swap="outerHTML"
+         hx-push-url="true" hx-sync="#exercise-library:replace">
+<div class="library-heading"><h2 class="font-bold text-base">Made for better practice <span class="result-count" role="status" aria-live="polite" th:text="${exercises.size() + (exercises.size() == 1 ? ' exercise' : ' exercises')}"></span></h2><span class="result-count"><i class="fa-solid fa-lock" aria-hidden="true"></i> Your private collection</span></div>
+<form method="get" th:action="@{/exercises}" th:hx-get="@{/exercises}" class="library-filters"
+      hx-trigger="submit, input changed delay:300ms from:#exercise-search, change from:select">
+<input type="hidden" name="type" th:value="${type}"/>
+<label class="search-field"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" id="exercise-search" name="q" th:value="${q}" placeholder="Search your exercises..." aria-label="Search exercises by name"/></label>
+<select class="field" name="difficulty" aria-label="Filter by difficulty"><option value="">All difficulties</option><option th:each="item : ${difficulties}" th:value="${item}" th:text="${item.label}" th:selected="${item == difficulty}"></option></select>
+<button class="btn btn-light" type="submit">Search</button>
+<div class="flex gap-2" role="group" aria-label="Exercise view"><button type="button" class="iconbtn active" data-exercise-view="grid" aria-label="Grid view" aria-pressed="true"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i></button><button type="button" class="iconbtn" data-exercise-view="list" aria-label="List view" aria-pressed="false"><i class="fa-solid fa-list" aria-hidden="true"></i></button></div>
+<div class="type-tabs" role="group" aria-label="Filter by exercise type">
+<a class="filter-tab" th:href="@{/exercises(q=${q},difficulty=${difficulty})}"
+   th:hx-get="@{/exercises}" hx-include="closest form" hx-vals='{"type":""}'
+   th:classappend="${type == null} ? 'active'" th:attr="aria-current=${type == null ? 'true' : null}">All exercises</a>
+<a th:each="item : ${types}" class="filter-tab" th:href="@{/exercises(q=${q},difficulty=${difficulty},type=${item})}"
+   th:hx-get="@{/exercises}" hx-include="closest form" th:hx-vals='|{"type":"${item}"}|'
+   th:text="${item.label}" th:classappend="${item == type} ? 'active'"
+   th:attr="aria-current=${item == type ? 'true' : null}"></a>
+</div>
+</form>
+<div th:if="${exercises.isEmpty()}" class="empty-state panel"><i class="fa-solid fa-layer-group feature-icon" aria-hidden="true"></i><h3 class="font-bold mt-4">No exercises found</h3><p class="page-subtitle">Try another name or choose a different filter.</p><div class="mt-5"><a class="btn btn-light" th:href="@{/exercises}" th:hx-get="@{/exercises}">Clear filters</a> <a class="btn btn-primary" th:href="@{/exercises/new}">New exercise</a></div></div>
+<div class="exercise-grid">
+<article class="exercise-card" th:each="exercise : ${exercises}">
+<a class="exercise-art" th:href="@{/exercises/{id}(id=${exercise.id})}" th:aria-label="${'Open ' + exercise.name}"><img loading="lazy" th:src="@{/exercises/{id}/drawing(id=${exercise.id})}" th:alt="${'Drawing for ' + exercise.name}"/><span class="difficulty"><span class="dot"></span> <span th:text="${exercise.difficulty.label}"></span></span></a>
+<div class="card-content"><span class="chip" th:text="${exercise.type.label}"></span><h3 class="font-extrabold mt-3 text-base"><a th:href="@{/exercises/{id}(id=${exercise.id})}" th:text="${exercise.name}"></a></h3><p class="exercise-goal" th:text="${exercise.goal}"></p><div class="card-footer"><span><i class="fa-solid fa-bullseye" aria-hidden="true"></i> Practice with purpose</span><a class="text-link" th:href="@{/training/new(exercise=${exercise.id})}">Assign →</a></div></div>
+</article></div>
+</section><p class="collection-note">Your private collection. Ready for the next session.</p>
+</div>
+<th:block layout:fragment="pageScripts"><script defer th:src="@{/js/exercises.js}"></script></th:block></body></html>

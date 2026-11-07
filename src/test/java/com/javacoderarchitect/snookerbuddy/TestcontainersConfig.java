@@ -2,6 +2,7 @@ package com.javacoderarchitect.snookerbuddy;
 
 import static org.testcontainers.utility.DockerImageName.parse;
 
+import java.time.Duration;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
@@ -14,6 +15,6 @@ public class TestcontainersConfig {
     @Bean
     @ServiceConnection
     PostgreSQLContainer postgres() {
-        return new PostgreSQLContainer(parse("postgres:18-alpine"));
+        return new PostgreSQLContainer(parse("postgres:18-alpine")).withStartupTimeout(Duration.ofMinutes(3));
     }
 }

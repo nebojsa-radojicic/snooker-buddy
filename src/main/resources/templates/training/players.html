@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>My players</title></head><body>
+<span layout:fragment="pageTitle">My players</span>
+<div layout:fragment="content">
+<div class="library-heading"><div><h1 class="page-title">Your players</h1><p class="page-subtitle">Give every player a clear next step.</p></div><a class="btn btn-light" th:href="@{/training}">Training plans →</a></div>
+<section class="panel p-6 mb-6"><h2 class="font-bold text-lg">Add a player</h2><p class="page-subtitle">Enter the email of an existing Snooker Buddy account. Each player works with one coach.</p><form method="post" th:action="@{/players}" th:object="${player}" class="mt-5"><label for="email" class="field-label">Player email</label><div class="player-email-row"><input class="field" type="email" th:field="*{email}" required placeholder="player@example.com" aria-describedby="email-error"/><button class="btn btn-primary">Add player</button></div><p id="email-error" class="validation-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></p></form></section>
+<p class="page-subtitle" th:if="${players.isEmpty()}">No players yet. Add a player to start assigning training.</p>
+<div class="training-grid"><article class="panel training-card" th:each="player : ${players}"><div class="flex items-center gap-3"><span class="avatar"><i class="fa-regular fa-user" aria-hidden="true"></i></span><h2 class="font-bold" th:text="${player.name}"></h2></div><p class="page-subtitle" th:text="${player.email}"></p><a class="btn btn-light mt-5" th:href="@{/training/new}">Assign training →</a></article></div>
+</div>
+<th:block layout:fragment="pageScripts"><script defer th:src="@{/js/training.js}"></script></th:block>
+</body></html>

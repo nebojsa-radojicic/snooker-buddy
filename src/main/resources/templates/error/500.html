@@ -1,27 +1,18 @@
 <!DOCTYPE html>
-<html lang="en"
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Server Error</title>
-</head>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Server error</title></head>
 <body>
-<div layout:fragment="content">
-    <div class="flex flex-col items-center justify-center min-h-[60vh] text-center">
-        <div class="mb-8">
-            <i class="fas fa-server text-red-500 text-6xl"></i>
-        </div>
-        <h1 class="text-4xl font-bold text-gray-900 mb-4">500 - Server Error</h1>
-        <p class="text-lg text-gray-600 mb-4">Some error occurred while processing your request.</p>
-        <p class="text-md text-gray-500 mb-8">Please try again later.</p>
-        <a th:href="@{/}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-            <i class="fas fa-home mr-2"></i>
-            Go to Homepage
-        </a>
-    </div>
+<span layout:fragment="pageTitle">Server error</span>
+<div layout:fragment="content" class="error-wrap">
+    <section class="panel error-card" aria-labelledby="error-title">
+        <span class="feature-icon"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i></span>
+        <p class="error-code">500</p>
+        <p class="eyebrow mb-3">SERVER ERROR</p>
+        <h1 id="error-title" class="text-2xl font-extrabold tracking-tight">Let’s take a moment to reset.</h1>
+        <p class="page-subtitle max-w-sm mx-auto">Something went wrong while processing your request. Please try again later.</p>
+        <a th:href="@{/}" class="btn btn-primary mt-7"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Back to workspace</a>
+    </section>
 </div>
 </body>
 </html>
