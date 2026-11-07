@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -24,9 +25,11 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 class TrainingAssignmentsTests extends BaseIT {
     private final MockMvc mvc;
     private final TrainingService service;
+    private final JdbcTemplate jdbc;
 
     @Autowired
-    TrainingAssignmentsTests(MockMvc mvc, TrainingService service) {
+    TrainingAssignmentsTests(MockMvc mvc, TrainingService service, JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
         this.mvc = mvc;
         this.service = service;
     }
@@ -128,11 +131,22 @@ class TrainingAssignmentsTests extends BaseIT {
     void assignedPlayerCanReadOnlyExercisesAndDrawingsIncludedInThePlan() throws Exception {
         Long id = group();
         String exercise = "/training/" + id + "/exercises/-1";
+        var saved = jdbc.queryForMap("select * from exercises where id = -1");
+        mvc.perform(get("/exercises/-1").with(user(account(1))))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Setup")))
+                .andExpect(content().string(containsString("Pot the red")));
         for (long userId : List.of(1L, 2L)) {
             mvc.perform(get(exercise).with(user(account(userId))))
                     .andExpect(status().isOk())
                     .andExpect(content().string(containsString("Straight pot")))
-                    .andExpect(content().string(containsString("8 successful / 10 attempts")));
+                    .andExpect(content().string(containsString("8 successful / 10 attempts")))
+                    .andExpect(content().string(containsString("Setup")))
+                    .andExpect(content().string(containsString("Pot the red")))
+                    .andExpect(content().string(containsString("Exercise difficulty:")))
+                    .andExpect(content().string(containsString("Easy")))
+                    .andExpect(content().string(containsString("Exercise type:")))
+                    .andExpect(content().string(containsString("Technique")));
             mvc.perform(get(exercise + "/drawing").with(user(account(userId))))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType("image/jpeg"))
@@ -147,6 +161,9 @@ class TrainingAssignmentsTests extends BaseIT {
         mvc.perform(get("/exercises/-1").with(user(account(2)))).andExpect(status().isNotFound());
         mvc.perform(get("/exercises/-1/drawing").with(user(account(2)))).andExpect(status().isNotFound());
         assertThat(service.plans(3L)).isEmpty();
+        assertThat(jdbc.queryForMap("select * from exercises where id = -1"))
+                .usingRecursiveComparison()
+                .isEqualTo(saved);
     }
 
     @Test

@@ -12,7 +12,7 @@ The actors below are an identified coach and an identified player with an existi
 |---|---|---|
 | UC-001 | Enforce Coach and Player Access Boundaries | COMPLETED |
 | UC-002 | Save an Exercise in a Private Library | COMPLETED |
-| UC-003 | View Exercise Instructions and Goals | NOT_IMPLEMENTED |
+| UC-003 | View Exercise Instructions and Goals | COMPLETED |
 | UC-004 | Search Exercises by Name | NOT_IMPLEMENTED |
 | UC-005 | Filter Exercises by Difficulty | NOT_IMPLEMENTED |
 | UC-006 | Filter Exercises by Predefined Type | NOT_IMPLEMENTED |
@@ -65,7 +65,7 @@ Implementation verification: the existing photo-upload and private-library flow 
 
 ### UC-003 — View Exercise Instructions and Goals
 
-- **Status:** NOT_IMPLEMENTED
+- **Status:** COMPLETED
 - **Depends On:** UC-002
 - **Description:** A coach, or a player with access to an assigned exercise, opens its details to understand the setup, instructions, and intended goal. The mockup presents these as the drawing, How to practice, and What counts as success.
 - **Acceptance Criteria:**
@@ -74,6 +74,8 @@ Implementation verification: the existing photo-upload and private-library flow 
   - Exercise details display the difficulty label and predefined type.
   - Viewing an exercise does not alter its saved content.
   - Exercise difficulty is presented as an exercise label, without assigning the player a validated skill level.
+
+Implementation verification: coach-library and assigned-exercise views display the drawing, name, instructions, goal, and explicitly labeled exercise type and difficulty. Added MVC tests for both viewing paths and authorization failures, plus a database snapshot assertion that viewing leaves the stored exercise unchanged. Fourteen focused tests passed. The user confirmed `./mvnw clean verify` finished with `BUILD SUCCESS`, completing database and full-build verification.
 
 ### UC-004 — Search Exercises by Name
 
