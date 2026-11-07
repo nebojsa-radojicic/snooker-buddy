@@ -69,6 +69,9 @@ coach several players while training under its own single coach. Coach tools
 assigned drawings through their training plans; no access to their coach's other
 private drawings is granted. Administrator status alone does not grant coach or
 player access.
+The seeded `admin@gmail.com` account receives explicit Coach and Player roles
+through migration `V006`. Restart the application to apply the migration, then
+sign out and sign in again to refresh the session authorities.
 
 Migration `V004` replaces the single authority column with `user_roles`, preserving
 legacy authorities and inferring coach/player roles from existing exercise

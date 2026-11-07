@@ -1,6 +1,7 @@
 package com.javacoderarchitect.snookerbuddy.exercises;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -16,17 +17,22 @@ import java.io.ByteArrayOutputStream;
 import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.SqlMergeMode;
 import org.springframework.test.web.servlet.MockMvc;
 
 @Sql("/test-data.sql")
 class ExerciseTests extends BaseIT {
     private final MockMvc mockMvc;
     private final ExerciseService service;
+    private final JdbcTemplate jdbc;
 
     @Autowired
-    ExerciseTests(MockMvc mockMvc, ExerciseService service) {
+    ExerciseTests(MockMvc mockMvc, ExerciseService service, JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
         this.mockMvc = mockMvc;
         this.service = service;
     }
@@ -47,6 +53,7 @@ class ExerciseTests extends BaseIT {
                         .file(photo())
                         .with(user(coach(1)))
                         .with(csrf())
+                        .param("ownerId", "2")
                         .param("name", "The straight pot")
                         .param("description", "Place the red on its spot.")
                         .param("goal", "Pot the red.")
@@ -55,6 +62,13 @@ class ExerciseTests extends BaseIT {
                 .andExpect(status().is3xxRedirection())
                 .andReturn();
         var url = result.getResponse().getRedirectedUrl();
+        Long id = Long.valueOf(url.substring(url.lastIndexOf('/') + 1));
+        assertThat(jdbc.queryForObject("select owner_id from exercises where id = ?", Long.class, id))
+                .isEqualTo(1L);
+        assertThat(jdbc.queryForObject("select count(*) from training_plans", Long.class))
+                .isZero();
+        assertThat(jdbc.queryForObject("select count(*) from coach_players", Long.class))
+                .isZero();
         mockMvc.perform(get(url).with(user(coach(1))))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("The straight pot")))
@@ -71,10 +85,56 @@ class ExerciseTests extends BaseIT {
                 .getContentAsByteArray();
         var decoded = ImageIO.read(new java.io.ByteArrayInputStream(image));
         assertThat(decoded.getWidth()).isEqualTo(1600);
+        // Read through another request, after the saving transaction has ended.
+        mockMvc.perform(get(url + "/drawing").with(user(coach(1))))
+                .andExpect(status().isOk())
+                .andExpect(content().bytes(image));
         mockMvc.perform(get(url).with(user(coach(2)))).andExpect(status().isNotFound());
         mockMvc.perform(get(url + "/drawing").with(user(coach(2)))).andExpect(status().isNotFound());
         mockMvc.perform(get("/exercises").with(user(coach(2))))
                 .andExpect(content().string(not(containsString("The straight pot"))));
+    }
+
+    @Test
+    @SqlMergeMode(SqlMergeMode.MergeMode.MERGE)
+    @Sql(
+            statements = {
+                "insert into users(id, name, email, password) values (3, 'Player', 'player@example.com', 'unused')",
+                "insert into user_roles(user_id, role) values (3, 'ROLE_PLAYER')"
+            })
+    void playerOnlyAccountCannotSaveEvenWithAValidPhotoAndForgedOwner() throws Exception {
+        var player = new SecurityUser(3L, "Player", "player@example.com", "unused", Role.ROLE_PLAYER);
+        mockMvc.perform(multipart("/exercises")
+                        .file(photo())
+                        .with(user(player))
+                        .with(csrf())
+                        .param("ownerId", "1")
+                        .param("name", "Player upload")
+                        .param("description", "Setup")
+                        .param("goal", "Pot")
+                        .param("difficulty", "EASY")
+                        .param("type", "TECHNIQUE"))
+                .andExpect(status().isForbidden());
+        var command = new CreateExerciseCmd(
+                "Player upload", "Setup", "Pot", Difficulty.EASY, ExerciseType.TECHNIQUE, photo());
+        assertThatThrownBy(() -> service.create(3L, command)).isInstanceOf(AccessDeniedException.class);
+        assertThat(jdbc.queryForObject("select count(*) from exercises", Long.class))
+                .isZero();
+    }
+
+    @Test
+    void rejectsMissingDrawingWithoutCreatingAnExercise() throws Exception {
+        mockMvc.perform(multipart("/exercises")
+                        .with(user(coach(1)))
+                        .with(csrf())
+                        .param("name", "Missing drawing")
+                        .param("description", "Setup")
+                        .param("goal", "Pot")
+                        .param("difficulty", "EASY")
+                        .param("type", "TECHNIQUE"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Upload your exercise drawing.")));
+        assertThat(service.findLibrary(1L, "", null, null)).isEmpty();
     }
 
     @Test

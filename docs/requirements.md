@@ -11,7 +11,7 @@ The actors below are an identified coach and an identified player with an existi
 | UseCase ID | Use Case Title | Status |
 |---|---|---|
 | UC-001 | Enforce Coach and Player Access Boundaries | COMPLETED |
-| UC-002 | Save an Exercise in a Private Library | NOT_IMPLEMENTED |
+| UC-002 | Save an Exercise in a Private Library | COMPLETED |
 | UC-003 | View Exercise Instructions and Goals | NOT_IMPLEMENTED |
 | UC-004 | Search Exercises by Name | NOT_IMPLEMENTED |
 | UC-005 | Filter Exercises by Difficulty | NOT_IMPLEMENTED |
@@ -49,7 +49,7 @@ Implementation verification: coach/player role boundaries, combined roles, basic
 
 ### UC-002 — Save an Exercise in a Private Library
 
-- **Status:** NOT_IMPLEMENTED
+- **Status:** COMPLETED
 - **Depends On:** UC-001
 - **Description:** A coach saves an existing exercise using a photo of a drawing and descriptive metadata so it can be found and reused. The mockup's New exercise form illustrates the workflow; a table editor is not required.
 - **Acceptance Criteria:**
@@ -60,6 +60,8 @@ Implementation verification: coach/player role boundaries, combined roles, basic
   - Saving an exercise does not require assigning it to a player.
   - Saving an exercise does not require recreating its drawing with a digital table editor.
   - A player cannot create an exercise in the coach's private collection.
+
+Implementation verification: the existing photo-upload and private-library flow implements the required behavior; no production changes were necessary. Regression coverage now checks all metadata, authenticated ownership despite a forged owner field, saving without a coach–player link or training assignment, reopening the drawing, missing uploads, and rejection of player-only writes. Eleven focused MVC/upload/drawing tests passed. The user confirmed `./mvnw clean verify` finished with `BUILD SUCCESS`, completing database and full-build verification.
 
 ### UC-003 — View Exercise Instructions and Goals
 
