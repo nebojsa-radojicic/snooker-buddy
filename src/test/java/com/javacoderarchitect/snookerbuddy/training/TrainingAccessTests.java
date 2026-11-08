@@ -37,7 +37,12 @@ class TrainingAccessTests {
     void setUp() {
         service = new TrainingService(repository, players, exercises, users);
         plan = new TrainingPlanEntity(
-                1L, 2L, "Practice", AssignmentFormat.TRAINING_SESSION, SessionKind.INDEPENDENT, 10, 8, List.of(7L));
+                1L,
+                2L,
+                "Practice",
+                AssignmentFormat.TRAINING_SESSION,
+                SessionKind.INDEPENDENT,
+                List.of(new TrainingPlanExercise(7L, 10, 8)));
     }
 
     @Test

@@ -16,7 +16,7 @@ The actors below are an identified coach and an identified player with an existi
 | UC-004 | Search Exercises by Name | COMPLETED |
 | UC-005 | Filter Exercises by Difficulty | COMPLETED |
 | UC-006 | Filter Exercises by Predefined Type | COMPLETED |
-| UC-007 | Define Default Exercise Targets | NOT_IMPLEMENTED |
+| UC-007 | Define Default Exercise Targets | COMPLETED |
 | UC-008 | Assign an Individual Exercise | NOT_IMPLEMENTED |
 | UC-009 | Assign a Grouped Training Session | NOT_IMPLEMENTED |
 | UC-010 | Personalize Targets for a Player | NOT_IMPLEMENTED |
@@ -122,7 +122,7 @@ Implementation verification: the existing shared type enum, creation selector, t
 
 ### UC-007 — Define Default Exercise Targets
 
-- **Status:** NOT_IMPLEMENTED
+- **Status:** COMPLETED
 - **Depends On:** UC-002
 - **Description:** A coach supplies default attempts and success criteria for an exercise so it can be assigned without re-entering the target. The mockup distinguishes library defaults from personal targets.
 - **Acceptance Criteria:**
@@ -130,7 +130,10 @@ Implementation verification: the existing shared type enum, creation selector, t
   - A coach can define the default success criteria for an exercise.
   - The exercise retains its default targets for subsequent assignments.
   - Defaults are available for inspection when preparing an assignment.
+  - Each exercise keeps its own default targets when included in a grouped session.
   - Where success is expressed as a count of successful attempts, the target cannot exceed the planned total attempts.
+
+Implementation verification: exercise creation accepts default attempts and successful-attempt targets alongside the existing text success criterion. Defaults are persisted and shown in library details and assignment preparation. Each assignment stores targets per exercise, including grouped sessions; existing personalization overrides those copies without changing library defaults. Migration `V007` backfills existing exercise defaults to 8/10 and copies existing plan targets into their exercise entries while retaining score links. Eighteen focused tests passed. The user confirmed `./mvnw clean verify` finished with `BUILD SUCCESS`, completing database, migration, and full-build verification.
 
 ### UC-008 — Assign an Individual Exercise
 

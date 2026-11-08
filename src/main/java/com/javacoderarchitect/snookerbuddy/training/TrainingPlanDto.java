@@ -13,7 +13,5 @@ public record TrainingPlanDto(
         String playerName,
         AssignmentFormat format,
         SessionKind kind,
-        int attempts,
-        int target,
         Instant createdAt,
         List<ExerciseDto> exercises) {}

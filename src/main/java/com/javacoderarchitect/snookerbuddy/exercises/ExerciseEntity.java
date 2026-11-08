@@ -31,6 +31,12 @@ class ExerciseEntity extends BaseEntity {
     @Column(nullable = false)
     private ExerciseType type;
 
+    @Column(name = "default_attempts", nullable = false)
+    private int attempts;
+
+    @Column(name = "default_target", nullable = false)
+    private int target;
+
     @Column(nullable = false)
     private byte[] drawing;
 
@@ -46,6 +52,8 @@ class ExerciseEntity extends BaseEntity {
         this.goal = cmd.goal().strip();
         this.difficulty = cmd.difficulty();
         this.type = cmd.type();
+        this.attempts = cmd.attempts();
+        this.target = cmd.target();
         this.drawing = drawing;
         this.drawingContentType = contentType;
     }
@@ -72,6 +80,14 @@ class ExerciseEntity extends BaseEntity {
 
     public ExerciseType getType() {
         return type;
+    }
+
+    public int getAttempts() {
+        return attempts;
+    }
+
+    public int getTarget() {
+        return target;
     }
 
     public byte[] getDrawing() {

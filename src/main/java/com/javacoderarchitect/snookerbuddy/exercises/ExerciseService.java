@@ -2,14 +2,17 @@ package com.javacoderarchitect.snookerbuddy.exercises;
 
 import com.javacoderarchitect.snookerbuddy.users.Role;
 import com.javacoderarchitect.snookerbuddy.users.UsersAPI;
+import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@Validated
 class ExerciseService {
     private final ExerciseRepository repository;
 
@@ -28,7 +31,7 @@ class ExerciseService {
     }
 
     @Transactional
-    public Long create(Long ownerId, CreateExerciseCmd cmd) {
+    public Long create(Long ownerId, @Valid CreateExerciseCmd cmd) {
         users.requireRole(ownerId, Role.ROLE_COACH);
         var file = cmd.drawing();
         if (file == null || file.isEmpty()) throw new IllegalArgumentException("Upload your exercise drawing.");

@@ -42,20 +42,22 @@ class TrainingService {
         } catch (ResponseStatusException ex) {
             throw new IllegalArgumentException("Choose exercises from your own library.", ex);
         }
-        int attempts = cmd.customTargets() ? cmd.attempts() : 10;
-        int target = cmd.customTargets() ? cmd.target() : 8;
+        var assigned = selected.stream()
+                .map(exercise -> new TrainingPlanExercise(
+                        exercise.id(),
+                        cmd.customTargets() ? cmd.attempts() : exercise.attempts(),
+                        cmd.customTargets() ? cmd.target() : exercise.target()))
+                .toList();
         if (cmd.format() == AssignmentFormat.INDIVIDUAL_EXERCISES) {
-            return selected.stream()
-                    .map(exercise -> repository
+            return java.util.stream.IntStream.range(0, selected.size())
+                    .mapToObj(index -> repository
                             .save(new TrainingPlanEntity(
                                     coachId,
                                     cmd.playerId(),
-                                    exercise.name(),
+                                    selected.get(index).name(),
                                     cmd.format(),
                                     cmd.kind(),
-                                    attempts,
-                                    target,
-                                    List.of(exercise.id())))
+                                    List.of(assigned.get(index))))
                             .getId())
                     .toList();
         }
@@ -63,8 +65,7 @@ class TrainingService {
                 ? "Practice session"
                 : cmd.name().strip();
         return List.of(repository
-                .save(new TrainingPlanEntity(
-                        coachId, cmd.playerId(), name, cmd.format(), cmd.kind(), attempts, target, cmd.exerciseIds()))
+                .save(new TrainingPlanEntity(coachId, cmd.playerId(), name, cmd.format(), cmd.kind(), assigned))
                 .getId());
     }
 
@@ -84,7 +85,8 @@ class TrainingService {
     @Transactional(readOnly = true)
     public ExerciseDto exercise(Long userId, Long planId, Long exerciseId) {
         var plan = containing(userId, planId, exerciseId);
-        return exercises.selected(plan.getCoachId(), List.of(exerciseId)).getFirst();
+        return withAssignedTargets(
+                plan, exercises.selected(plan.getCoachId(), List.of(exerciseId)).getFirst());
     }
 
     @Transactional(readOnly = true)
@@ -123,9 +125,17 @@ class TrainingService {
                 users.findById(plan.getPlayerId()).orElseThrow().name(),
                 plan.getFormat(),
                 plan.getKind(),
-                plan.getAttempts(),
-                plan.getTarget(),
                 plan.getCreatedAt(),
-                exercises.selected(plan.getCoachId(), plan.getExerciseIds()));
+                exercises.selected(plan.getCoachId(), plan.getExerciseIds()).stream()
+                        .map(exercise -> withAssignedTargets(plan, exercise))
+                        .toList());
+    }
+
+    private ExerciseDto withAssignedTargets(TrainingPlanEntity plan, ExerciseDto exercise) {
+        var assigned = plan.getExercises().stream()
+                .filter(item -> item.getExerciseId().equals(exercise.id()))
+                .findFirst()
+                .orElseThrow();
+        return exercise.withTargets(assigned.getAttempts(), assigned.getTarget());
     }
 }

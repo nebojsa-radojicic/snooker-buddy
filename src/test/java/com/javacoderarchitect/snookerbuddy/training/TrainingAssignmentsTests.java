@@ -79,8 +79,8 @@ class TrainingAssignmentsTests extends BaseIT {
         assertThat(plan.name()).isEqualTo("Cue-ball session");
         assertThat(plan.exercises()).extracting(e -> e.id()).containsExactly(-2L, -1L);
         assertThat(plan.kind()).isEqualTo(SessionKind.JOINT);
-        assertThat(plan.attempts()).isEqualTo(12);
-        assertThat(plan.target()).isEqualTo(9);
+        assertThat(plan.exercises().getFirst().attempts()).isEqualTo(12);
+        assertThat(plan.exercises().getFirst().target()).isEqualTo(9);
         assertThat(result.getResponse().getRedirectedUrl()).isEqualTo("/training/" + plan.id());
         mvc.perform(get("/training").with(user(account(1))))
                 .andExpect(status().isOk())
@@ -102,8 +102,8 @@ class TrainingAssignmentsTests extends BaseIT {
         assertThat(plans).allSatisfy(plan -> {
             assertThat(plan.exercises()).hasSize(1);
             assertThat(plan.format()).isEqualTo(AssignmentFormat.INDIVIDUAL_EXERCISES);
-            assertThat(plan.attempts()).isEqualTo(10);
-            assertThat(plan.target()).isEqualTo(8);
+            assertThat(plan.exercises().getFirst().attempts()).isEqualTo(10);
+            assertThat(plan.exercises().getFirst().target()).isEqualTo(8);
         });
     }
 
@@ -123,8 +123,8 @@ class TrainingAssignmentsTests extends BaseIT {
                 .getFirst();
         var plan = service.plan(2L, id);
         assertThat(plan.name()).isEqualTo("Practice session");
-        assertThat(plan.target()).isEqualTo(8);
-        assertThat(plan.attempts()).isEqualTo(10);
+        assertThat(plan.exercises().getFirst().target()).isEqualTo(8);
+        assertThat(plan.exercises().getFirst().attempts()).isEqualTo(10);
     }
 
     @Test

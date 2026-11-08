@@ -43,7 +43,13 @@ class ScoreServiceTests {
     }
 
     private TrainingPlanEntity plan(SessionKind kind) {
-        return new TrainingPlanEntity(1L, 2L, "Practice", AssignmentFormat.TRAINING_SESSION, kind, 10, 8, List.of(7L));
+        return new TrainingPlanEntity(
+                1L,
+                2L,
+                "Practice",
+                AssignmentFormat.TRAINING_SESSION,
+                kind,
+                List.of(new TrainingPlanExercise(7L, 10, 8)));
     }
 
     private TrainingPlanDto planDto() {
@@ -56,8 +62,6 @@ class ScoreServiceTests {
                 "Player",
                 AssignmentFormat.TRAINING_SESSION,
                 SessionKind.INDEPENDENT,
-                10,
-                8,
                 Instant.now(),
                 List.of(new ExerciseDto(7L, "Pot", "Setup", "Goal", Difficulty.EASY, ExerciseType.TECHNIQUE)));
     }

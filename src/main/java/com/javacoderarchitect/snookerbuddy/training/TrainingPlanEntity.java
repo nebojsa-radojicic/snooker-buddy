@@ -30,17 +30,10 @@ class TrainingPlanEntity extends BaseEntity {
     @Column(nullable = false)
     private SessionKind kind;
 
-    @Column(nullable = false)
-    private int attempts;
-
-    @Column(nullable = false)
-    private int target;
-
     @ElementCollection
     @CollectionTable(name = "training_plan_exercises", joinColumns = @JoinColumn(name = "plan_id"))
     @OrderColumn(name = "position")
-    @Column(name = "exercise_id", nullable = false)
-    private List<Long> exerciseIds = new ArrayList<>();
+    private List<TrainingPlanExercise> exercises = new ArrayList<>();
 
     protected TrainingPlanEntity() {}
 
@@ -50,17 +43,13 @@ class TrainingPlanEntity extends BaseEntity {
             String name,
             AssignmentFormat format,
             SessionKind kind,
-            int attempts,
-            int target,
-            List<Long> ids) {
+            List<TrainingPlanExercise> exercises) {
         this.coachId = coachId;
         this.playerId = playerId;
         this.name = name;
         this.format = format;
         this.kind = kind;
-        this.attempts = attempts;
-        this.target = target;
-        this.exerciseIds = new ArrayList<>(ids);
+        this.exercises = new ArrayList<>(exercises);
     }
 
     public Long getId() {
@@ -87,15 +76,11 @@ class TrainingPlanEntity extends BaseEntity {
         return kind;
     }
 
-    public int getAttempts() {
-        return attempts;
-    }
-
-    public int getTarget() {
-        return target;
-    }
-
     public List<Long> getExerciseIds() {
-        return List.copyOf(exerciseIds);
+        return exercises.stream().map(TrainingPlanExercise::getExerciseId).toList();
+    }
+
+    public List<TrainingPlanExercise> getExercises() {
+        return List.copyOf(exercises);
     }
 }

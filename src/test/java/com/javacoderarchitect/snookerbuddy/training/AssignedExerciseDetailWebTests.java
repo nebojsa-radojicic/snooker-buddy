@@ -59,7 +59,9 @@ class AssignedExerciseDetailWebTests {
                 "Reset the position after each shot.",
                 "Stop the white near the red.",
                 Difficulty.HARD,
-                ExerciseType.CUE_BALL_CONTROL);
+                ExerciseType.CUE_BALL_CONTROL,
+                12,
+                9);
         var plan = new TrainingPlanDto(
                 5L,
                 "Control practice",
@@ -69,8 +71,6 @@ class AssignedExerciseDetailWebTests {
                 "Player",
                 AssignmentFormat.TRAINING_SESSION,
                 SessionKind.INDEPENDENT,
-                12,
-                9,
                 Instant.now(),
                 List.of(exercise));
         when(service.exercise(viewer, 5L, 9L)).thenReturn(exercise);

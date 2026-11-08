@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 
 interface ExerciseRepository extends JpaRepository<ExerciseEntity, Long> {
     @Query("""
-        select new com.javacoderarchitect.snookerbuddy.exercises.ExerciseDto(e.id, e.name, e.description, e.goal, e.difficulty, e.type)
+        select new com.javacoderarchitect.snookerbuddy.exercises.ExerciseDto(e.id, e.name, e.description, e.goal, e.difficulty, e.type, e.attempts, e.target)
         from ExerciseEntity e
         where e.ownerId = :ownerId
           and locate(:search, lower(e.name)) > 0
@@ -18,7 +18,7 @@ interface ExerciseRepository extends JpaRepository<ExerciseEntity, Long> {
     List<ExerciseDto> findLibrary(Long ownerId, String search, Difficulty difficulty, ExerciseType type);
 
     @Query("""
-        select new com.javacoderarchitect.snookerbuddy.exercises.ExerciseDto(e.id, e.name, e.description, e.goal, e.difficulty, e.type)
+        select new com.javacoderarchitect.snookerbuddy.exercises.ExerciseDto(e.id, e.name, e.description, e.goal, e.difficulty, e.type, e.attempts, e.target)
         from ExerciseEntity e where e.ownerId = :ownerId and e.id in :ids
         """)
     List<ExerciseDto> findOwned(Long ownerId, List<Long> ids);

@@ -53,8 +53,10 @@ Open **My players** to link an existing registered player by email, then use
 Select a player, one or more exercises, and independent or joint practice.
 **Training session** groups the selection into one named plan; **Individual
 exercises** creates a separate plan named after each exercise. An unnamed grouped
-plan is called “Practice session”. Targets default to 8 successful attempts out
-of 10 and can be customized for the selected player.
+plan is called “Practice session”. Each exercise has default attempts and a success
+target, shown in the assignment picker alongside its success description. Each
+exercise keeps its own targets in a grouped session. The existing personalization
+option applies an override to all selected exercises for that assignment.
 
 Both the coach and assigned player can open the plan and its exercise drawings
 from **Training plans**. Players only gain access to exercises included in their
@@ -93,3 +95,15 @@ in that plan. A successful write returns 201 with the score and a `Location`
 header. This endpoint is the storage foundation; detailed result-entry screens,
 attempt-by-attempt entry, and optional performance measures belong to later use
 cases.
+
+### Default exercise targets (UC-007)
+
+The new-exercise form accepts default attempts (1–1000) and a successful-attempt
+target (1 through the total attempts). The existing **What counts as success?**
+text describes how to judge each attempt. Targets start at 8 successes out of 10;
+these values also apply to older exercises after migration `V007`.
+
+Library details and assignment preparation show each exercise's defaults.
+Assignments copy the targets into each included exercise, so later library changes
+cannot change an existing assignment. `V007` preserves the counts on existing
+plans by copying them to their exercise entries; existing scores stay linked.
