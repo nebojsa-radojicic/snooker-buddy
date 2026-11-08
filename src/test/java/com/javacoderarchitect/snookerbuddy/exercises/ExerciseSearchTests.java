@@ -149,4 +149,60 @@ class ExerciseSearchTests extends BaseIT {
                 .asInstanceOf(list(ExerciseDto.class))
                 .isEmpty();
     }
+
+    @Test
+    void clearingDifficultyRetainsNameAndTypeWithoutChangingUserRolesOrExerciseData() throws Exception {
+        var savedUsers = jdbc.queryForList("select * from users order by id");
+        var savedRoles = jdbc.queryForList("select * from user_roles order by user_id, role");
+        var savedExercises = jdbc.queryForList("select * from exercises order by id");
+        mvc.perform(get("/exercises")
+                        .with(user(coach()))
+                        .param("q", "straight")
+                        .param("difficulty", "HARD")
+                        .param("type", "TECHNIQUE"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("No exercises found")));
+        var cleared = mvc.perform(get("/exercises")
+                        .with(user(coach()))
+                        .param("q", "straight")
+                        .param("difficulty", "")
+                        .param("type", "TECHNIQUE"))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(cleared.getModelAndView().getModel().get("exercises"))
+                .asInstanceOf(list(ExerciseDto.class))
+                .extracting(ExerciseDto::name)
+                .containsExactly("Straight pot");
+        assertThat(jdbc.queryForList("select * from users order by id"))
+                .usingRecursiveComparison()
+                .isEqualTo(savedUsers);
+        assertThat(jdbc.queryForList("select * from user_roles order by user_id, role"))
+                .usingRecursiveComparison()
+                .isEqualTo(savedRoles);
+        assertThat(jdbc.queryForList("select * from exercises order by id"))
+                .usingRecursiveComparison()
+                .isEqualTo(savedExercises);
+    }
+
+    @Test
+    void theSameDifficultyNeverCombinesDifferentCoachesLibraries() throws Exception {
+        var first = mvc.perform(get("/exercises").with(user(coach())).param("difficulty", "EASY"))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(first.getModelAndView().getModel().get("exercises"))
+                .asInstanceOf(list(ExerciseDto.class))
+                .extracting(ExerciseDto::name)
+                .containsExactly("Safety 100% drill", "Straight pot");
+        var otherCoach = new SecurityUser(2L, "Other coach", "other@example.com", "unused", Role.ROLE_COACH);
+        var second = mvc.perform(get("/exercises")
+                        .with(user(otherCoach))
+                        .param("difficulty", "EASY")
+                        .param("ownerId", "1"))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(second.getModelAndView().getModel().get("exercises"))
+                .asInstanceOf(list(ExerciseDto.class))
+                .extracting(ExerciseDto::name)
+                .containsExactly("Straight private");
+    }
 }

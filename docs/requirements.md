@@ -14,7 +14,7 @@ The actors below are an identified coach and an identified player with an existi
 | UC-002 | Save an Exercise in a Private Library | COMPLETED |
 | UC-003 | View Exercise Instructions and Goals | COMPLETED |
 | UC-004 | Search Exercises by Name | COMPLETED |
-| UC-005 | Filter Exercises by Difficulty | NOT_IMPLEMENTED |
+| UC-005 | Filter Exercises by Difficulty | COMPLETED |
 | UC-006 | Filter Exercises by Predefined Type | NOT_IMPLEMENTED |
 | UC-007 | Define Default Exercise Targets | NOT_IMPLEMENTED |
 | UC-008 | Assign an Individual Exercise | NOT_IMPLEMENTED |
@@ -93,7 +93,7 @@ Implementation verification: name search uses the existing case-insensitive, whi
 
 ### UC-005 — Filter Exercises by Difficulty
 
-- **Status:** NOT_IMPLEMENTED
+- **Status:** COMPLETED
 - **Depends On:** UC-002
 - **Description:** A coach narrows the exercise collection using difficulty labels. The mockup's difficulty selector illustrates the interaction; its Easy, Medium, and Hard labels are illustrative pending the PRD decision.
 - **Acceptance Criteria:**
@@ -102,6 +102,8 @@ Implementation verification: name search uses the existing case-insensitive, whi
   - Clearing the difficulty selection removes the difficulty restriction.
   - Filtering never introduces exercises from another coach's collection.
   - Filtering by difficulty does not categorize or promote a player.
+
+Implementation verification: the existing difficulty selector and owner-scoped query implement the required behavior; no production changes were necessary. Added focused coverage for each existing label, selected-state retention, clearing through All difficulties while retaining name/type filters, empty results, and coach-only access. Database regressions check isolation between coaches and unchanged user roles and exercise data. Six focused MVC checks passed. The user confirmed `./mvnw clean verify` finished with `BUILD SUCCESS`, completing database and full-build verification.
 
 ### UC-006 — Filter Exercises by Predefined Type
 
