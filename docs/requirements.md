@@ -13,7 +13,7 @@ The actors below are an identified coach and an identified player with an existi
 | UC-001 | Enforce Coach and Player Access Boundaries | COMPLETED |
 | UC-002 | Save an Exercise in a Private Library | COMPLETED |
 | UC-003 | View Exercise Instructions and Goals | COMPLETED |
-| UC-004 | Search Exercises by Name | NOT_IMPLEMENTED |
+| UC-004 | Search Exercises by Name | COMPLETED |
 | UC-005 | Filter Exercises by Difficulty | NOT_IMPLEMENTED |
 | UC-006 | Filter Exercises by Predefined Type | NOT_IMPLEMENTED |
 | UC-007 | Define Default Exercise Targets | NOT_IMPLEMENTED |
@@ -79,7 +79,7 @@ Implementation verification: coach-library and assigned-exercise views display t
 
 ### UC-004 — Search Exercises by Name
 
-- **Status:** NOT_IMPLEMENTED
+- **Status:** COMPLETED
 - **Depends On:** UC-002
 - **Description:** A coach searches the private collection by exercise name to retrieve an exercise for training preparation. The mockup provides a name-search field and a no-results state.
 - **Acceptance Criteria:**
@@ -88,6 +88,8 @@ Implementation verification: coach-library and assigned-exercise views display t
   - A query with no matching exercise produces an observable no-results outcome.
   - Clearing the query removes the name restriction.
   - Searching does not modify saved exercises.
+
+Implementation verification: name search uses the existing case-insensitive, whitespace-trimmed substring match within the authenticated coach's library. Added a Clear search action that retains difficulty/type selections and works with ordinary navigation or HTMX. Regression tests cover owner identity, no-results rendering, clearing, access denial, query normalization, cross-coach isolation, and unchanged stored exercises. Eight focused tests passed. The user confirmed `./mvnw clean verify` finished with `BUILD SUCCESS`, completing database and full-build verification.
 
 ### UC-005 — Filter Exercises by Difficulty
 

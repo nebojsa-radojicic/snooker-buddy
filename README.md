@@ -35,9 +35,10 @@ photo, name, setup instructions, goal, difficulty, and predefined exercise type.
 Search updates as you type; difficulty and type filters update results immediately.
 Name matching ignores case and surrounding spaces. Filters combine, stay in the
 URL for refresh and browser navigation, and use the same six predefined types as
-the exercise form. Clear filters resets all three controls. Switch between grid
+the exercise form. Clear search removes the name query while retaining difficulty
+and type selections; Clear filters resets all three controls. Switch between grid
 and list views or open an exercise to see its full drawing and instructions.
-The Search button and type links also work without JavaScript.
+The Search button, Clear search, and type links also work without JavaScript.
 
 Libraries and drawings are private to the signed-in account. Flyway migration
 `V002` stores exercises and drawings in PostgreSQL. JPG and PNG uploads work

@@ -19,6 +19,7 @@
 <label class="search-field"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" id="exercise-search" name="q" th:value="${q}" placeholder="Search your exercises..." aria-label="Search exercises by name"/></label>
 <select class="field" name="difficulty" aria-label="Filter by difficulty"><option value="">All difficulties</option><option th:each="item : ${difficulties}" th:value="${item}" th:text="${item.label}" th:selected="${item == difficulty}"></option></select>
 <button class="btn btn-light" type="submit">Search</button>
+<a th:if="${!#strings.isEmpty(q)}" class="btn btn-light" th:href="@{/exercises(difficulty=${difficulty},type=${type})}" th:hx-get="@{/exercises(difficulty=${difficulty},type=${type})}">Clear search</a>
 <div class="flex gap-2" role="group" aria-label="Exercise view"><button type="button" class="iconbtn active" data-exercise-view="grid" aria-label="Grid view" aria-pressed="true"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i></button><button type="button" class="iconbtn" data-exercise-view="list" aria-label="List view" aria-pressed="false"><i class="fa-solid fa-list" aria-hidden="true"></i></button></div>
 <div class="type-tabs" role="group" aria-label="Filter by exercise type">
 <a class="filter-tab" th:href="@{/exercises(q=${q},difficulty=${difficulty})}"

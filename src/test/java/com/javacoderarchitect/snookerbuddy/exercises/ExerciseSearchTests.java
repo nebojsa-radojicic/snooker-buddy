@@ -16,15 +16,18 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 
 @Sql({"/test-data.sql", "/exercise-search-data.sql"})
 class ExerciseSearchTests extends BaseIT {
     private final MockMvc mvc;
+    private final JdbcTemplate jdbc;
 
     @Autowired
-    ExerciseSearchTests(MockMvc mvc) {
+    ExerciseSearchTests(MockMvc mvc, JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
         this.mvc = mvc;
     }
 
@@ -104,5 +107,46 @@ class ExerciseSearchTests extends BaseIT {
                 .andReturn();
         assertThat(library.getModelAndView().getModel().get("types")).isEqualTo(ExerciseType.values());
         assertThat(form.getModelAndView().getModel().get("types")).isEqualTo(ExerciseType.values());
+    }
+
+    @Test
+    void clearingOnlyTheNameRestoresMatchesWithinTheSelectedFiltersWithoutChangingStoredExercises() throws Exception {
+        var saved = jdbc.queryForList("select * from exercises order by id");
+        var none = mvc.perform(get("/exercises")
+                        .with(user(coach()))
+                        .param("q", "missing")
+                        .param("difficulty", "EASY")
+                        .param("type", "TECHNIQUE"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("No exercises found")))
+                .andReturn();
+        assertThat(none.getModelAndView().getModel().get("exercises"))
+                .asInstanceOf(list(ExerciseDto.class))
+                .isEmpty();
+        var cleared = mvc.perform(get("/exercises")
+                        .with(user(coach()))
+                        .param("q", "")
+                        .param("difficulty", "EASY")
+                        .param("type", "TECHNIQUE"))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(cleared.getModelAndView().getModel().get("exercises"))
+                .asInstanceOf(list(ExerciseDto.class))
+                .extracting(ExerciseDto::name)
+                .containsExactly("Straight pot");
+        assertThat(jdbc.queryForList("select * from exercises order by id"))
+                .usingRecursiveComparison()
+                .isEqualTo(saved);
+    }
+
+    @Test
+    void aQueryMatchingOnlyAnotherCoachsExerciseReturnsNoResults() throws Exception {
+        var result = mvc.perform(get("/exercises").with(user(coach())).param("q", "Straight private"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("No exercises found")))
+                .andReturn();
+        assertThat(result.getModelAndView().getModel().get("exercises"))
+                .asInstanceOf(list(ExerciseDto.class))
+                .isEmpty();
     }
 }
