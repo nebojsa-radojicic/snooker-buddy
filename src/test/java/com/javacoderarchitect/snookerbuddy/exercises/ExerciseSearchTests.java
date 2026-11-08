@@ -205,4 +205,49 @@ class ExerciseSearchTests extends BaseIT {
                 .extracting(ExerciseDto::name)
                 .containsExactly("Straight private");
     }
+
+    @Test
+    void clearingTheTypeRetainsNameAndDifficultyAndDoesNotModifyExercises() throws Exception {
+        var saved = jdbc.queryForList("select * from exercises order by id");
+        mvc.perform(get("/exercises")
+                        .with(user(coach()))
+                        .param("q", "straight")
+                        .param("difficulty", "HARD")
+                        .param("type", "TECHNIQUE"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("No exercises found")));
+        var cleared = mvc.perform(get("/exercises")
+                        .with(user(coach()))
+                        .param("q", "straight")
+                        .param("difficulty", "HARD")
+                        .param("type", ""))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(cleared.getModelAndView().getModel().get("exercises"))
+                .asInstanceOf(list(ExerciseDto.class))
+                .extracting(ExerciseDto::name)
+                .containsExactly("Straight stop");
+        assertThat(jdbc.queryForList("select * from exercises order by id"))
+                .usingRecursiveComparison()
+                .isEqualTo(saved);
+    }
+
+    @Test
+    void selectingTheSameTypeDoesNotExposeAnotherCoachsExercises() throws Exception {
+        var first = mvc.perform(get("/exercises").with(user(coach())).param("type", "TECHNIQUE"))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(first.getModelAndView().getModel().get("exercises"))
+                .asInstanceOf(list(ExerciseDto.class))
+                .extracting(ExerciseDto::name)
+                .containsExactly("Straight pot");
+        var other = new SecurityUser(2L, "Other coach", "other@example.com", "unused", Role.ROLE_COACH);
+        var second = mvc.perform(get("/exercises").with(user(other)).param("type", "TECHNIQUE"))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(second.getModelAndView().getModel().get("exercises"))
+                .asInstanceOf(list(ExerciseDto.class))
+                .extracting(ExerciseDto::name)
+                .containsExactly("Straight private");
+    }
 }

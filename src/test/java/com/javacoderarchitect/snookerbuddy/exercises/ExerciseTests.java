@@ -195,4 +195,20 @@ class ExerciseTests extends BaseIT {
                 .andExpect(content().string(containsString("name=\"_csrf\"")))
                 .andExpect(content().string(containsString("multipart/form-data")));
     }
+
+    @Test
+    void rejectsCustomExerciseTypeWithoutPersistingAnExercise() throws Exception {
+        mockMvc.perform(multipart("/exercises")
+                        .file(photo())
+                        .with(user(coach(1)))
+                        .with(csrf())
+                        .param("name", "Custom drill")
+                        .param("description", "Setup")
+                        .param("goal", "Pot")
+                        .param("difficulty", "EASY")
+                        .param("type", "COACH_CUSTOM_TYPE"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeHasFieldErrors("exercise", "type"));
+        assertThat(service.findLibrary(1L, "", null, null)).isEmpty();
+    }
 }

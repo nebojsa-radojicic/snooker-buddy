@@ -15,7 +15,7 @@ The actors below are an identified coach and an identified player with an existi
 | UC-003 | View Exercise Instructions and Goals | COMPLETED |
 | UC-004 | Search Exercises by Name | COMPLETED |
 | UC-005 | Filter Exercises by Difficulty | COMPLETED |
-| UC-006 | Filter Exercises by Predefined Type | NOT_IMPLEMENTED |
+| UC-006 | Filter Exercises by Predefined Type | COMPLETED |
 | UC-007 | Define Default Exercise Targets | NOT_IMPLEMENTED |
 | UC-008 | Assign an Individual Exercise | NOT_IMPLEMENTED |
 | UC-009 | Assign a Grouped Training Session | NOT_IMPLEMENTED |
@@ -107,7 +107,7 @@ Implementation verification: the existing difficulty selector and owner-scoped q
 
 ### UC-006 — Filter Exercises by Predefined Type
 
-- **Status:** NOT_IMPLEMENTED
+- **Status:** COMPLETED
 - **Depends On:** UC-002
 - **Description:** A coach classifies and retrieves exercises using a shared predefined type list. The mockup's type tabs illustrate retrieval, while the final type vocabulary remains open.
 - **Acceptance Criteria:**
@@ -117,6 +117,8 @@ Implementation verification: the existing difficulty selector and owner-scoped q
   - Clearing the type selection removes the type restriction.
   - A coach cannot create a custom exercise type.
   - All coaches use the same predefined type list.
+
+Implementation verification: the existing shared type enum, creation selector, type tabs, and owner-scoped query implement the required behavior; no production changes were necessary. Regression coverage checks all predefined types, shared creation/retrieval choices across coaches, selected tabs, empty results, clearing only the type restriction, cross-coach isolation, and rejection of custom type values without persistence. Eleven focused MVC checks passed. The user confirmed `./mvnw clean verify` finished with `BUILD SUCCESS`, completing database and full-build verification.
 
 ### UC-007 — Define Default Exercise Targets
 
