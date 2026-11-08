@@ -50,6 +50,8 @@ resized to a maximum of 1600 pixels on the longest side.
 
 Open **My players** to link an existing registered player by email, then use
 **Assign training** from **Training plans** or **Assign** on a library exercise.
+Assigning from a single library exercise preselects that exercise and the
+**Individual exercises** format. The format can still be changed in the form.
 Select a player, one or more exercises, and independent or joint practice.
 **Training session** groups the selection into one named plan; **Individual
 exercises** creates a separate plan named after each exercise. An unnamed grouped

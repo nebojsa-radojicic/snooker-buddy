@@ -17,7 +17,7 @@ The actors below are an identified coach and an identified player with an existi
 | UC-005 | Filter Exercises by Difficulty | COMPLETED |
 | UC-006 | Filter Exercises by Predefined Type | COMPLETED |
 | UC-007 | Define Default Exercise Targets | COMPLETED |
-| UC-008 | Assign an Individual Exercise | NOT_IMPLEMENTED |
+| UC-008 | Assign an Individual Exercise | COMPLETED |
 | UC-009 | Assign a Grouped Training Session | NOT_IMPLEMENTED |
 | UC-010 | Personalize Targets for a Player | NOT_IMPLEMENTED |
 | UC-011 | Review Assigned Training | NOT_IMPLEMENTED |
@@ -137,7 +137,7 @@ Implementation verification: exercise creation accepts default attempts and succ
 
 ### UC-008 — Assign an Individual Exercise
 
-- **Status:** NOT_IMPLEMENTED
+- **Status:** COMPLETED
 - **Depends On:** UC-003, UC-007
 - **Description:** A coach assigns an exercise from their collection to an associated player for joint or independent practice. The mockup's Assign action provides an entry point from an exercise card or detail view.
 - **Acceptance Criteria:**
@@ -149,6 +149,8 @@ Implementation verification: exercise creation accepts default attempts and succ
   - A coach cannot assign another coach's private exercise.
   - A coach cannot assign training to a player outside their coach–player relationships.
   - A player cannot issue a coach's training assignment.
+
+Implementation verification: a single exercise selected from the library now defaults to the individual-assignment format. Existing assignment logic preserves the recipient, joint/independent practice kind, exercise identity, and its default targets. Added MVC and service coverage for both practice kinds, coach identity, ownership/roster rejection, missing selections, player-only rejection, and CSRF protection. Database regressions verify persistence and recipient access to instructions, goals, drawings, and targets, with rejected requests leaving no assignments. Eleven focused checks passed. The user confirmed `./mvnw clean verify` finished with `BUILD SUCCESS`, completing database and full-build verification.
 
 ### UC-009 — Assign a Grouped Training Session
 

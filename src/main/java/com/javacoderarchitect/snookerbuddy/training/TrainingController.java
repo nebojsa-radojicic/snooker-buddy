@@ -42,7 +42,16 @@ class TrainingController {
         model.addAttribute(
                 "assignment",
                 new CreateAssignmentCmd(
-                        null, "", AssignmentFormat.TRAINING_SESSION, SessionKind.INDEPENDENT, selected, false, 10, 8));
+                        null,
+                        "",
+                        selected.size() == 1
+                                ? AssignmentFormat.INDIVIDUAL_EXERCISES
+                                : AssignmentFormat.TRAINING_SESSION,
+                        SessionKind.INDEPENDENT,
+                        selected,
+                        false,
+                        10,
+                        8));
         choices(model);
         return "training/form";
     }
