@@ -1,15 +1,25 @@
 package com.javacoderarchitect.snookerbuddy.training;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.javacoderarchitect.snookerbuddy.BaseIT;
 import com.javacoderarchitect.snookerbuddy.exercises.ExerciseDto;
+import com.javacoderarchitect.snookerbuddy.users.Role;
+import com.javacoderarchitect.snookerbuddy.users.SecurityUser;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlGroup;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -23,11 +33,20 @@ import org.springframework.transaction.support.TransactionTemplate;
 })
 class AssignmentTargetPersistenceTests extends BaseIT {
     private final TrainingService service;
+    private final MockMvc mockMvc;
+    private final ScoreService scores;
     private final JdbcTemplate jdbc;
     private final TransactionTemplate transaction;
 
     @Autowired
-    AssignmentTargetPersistenceTests(TrainingService service, JdbcTemplate jdbc, PlatformTransactionManager manager) {
+    AssignmentTargetPersistenceTests(
+            TrainingService service,
+            JdbcTemplate jdbc,
+            PlatformTransactionManager manager,
+            MockMvc mockMvc,
+            ScoreService scores) {
+        this.mockMvc = mockMvc;
+        this.scores = scores;
         this.service = service;
         this.jdbc = jdbc;
         this.transaction = new TransactionTemplate(manager);
@@ -74,5 +93,68 @@ class AssignmentTargetPersistenceTests extends BaseIT {
         assertThat(jdbc.queryForList(
                         "select default_target from exercises where id in (-1, -2) order by id desc", Integer.class))
                 .containsExactly(15, 9);
+    }
+
+    @ParameterizedTest
+    @EnumSource(SessionKind.class)
+    void groupedAssignmentKeepsEachExerciseAndPerformanceSeparate(SessionKind kind) throws Exception {
+        var coach = new SecurityUser(1L, "Coach", "coach@example.com", "unused", Role.ROLE_COACH);
+        var player = new SecurityUser(2L, "Player", "player@example.com", "unused", Role.ROLE_PLAYER);
+        var response = mockMvc.perform(post("/training")
+                        .with(user(coach))
+                        .with(csrf())
+                        .param("playerId", "2")
+                        .param("name", "Potting and cue control")
+                        .param("format", "TRAINING_SESSION")
+                        .param("kind", kind.name())
+                        .param("exerciseIds", "-2", "-1"))
+                .andExpect(status().is3xxRedirection())
+                .andReturn();
+
+        assertThat(service.plans(2L)).singleElement().satisfies(plan -> {
+            assertThat(plan.playerId()).isEqualTo(2L);
+            assertThat(plan.kind()).isEqualTo(kind);
+            assertThat(plan.format()).isEqualTo(AssignmentFormat.TRAINING_SESSION);
+            assertThat(plan.exercises())
+                    .extracting(ExerciseDto::id, ExerciseDto::attempts, ExerciseDto::target)
+                    .containsExactly(tuple(-2L, 12, 9), tuple(-1L, 20, 15));
+        });
+        var plan = service.plans(2L).getFirst();
+        var location = response.getResponse().getRedirectedUrl();
+        assertThat(location).isEqualTo("/training/" + plan.id());
+        mockMvc.perform(get(location).with(user(player)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Potting and cue control")))
+                .andExpect(content().string(containsString("Straight stop")))
+                .andExpect(content().string(containsString("Straight pot")));
+
+        for (var exercise : plan.exercises()) {
+            var exerciseUrl = location + "/exercises/" + exercise.id();
+            mockMvc.perform(get(exerciseUrl).with(user(player)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(containsString(exercise.name())))
+                    .andExpect(content().string(containsString(exercise.description())))
+                    .andExpect(content().string(containsString(exercise.goal())))
+                    .andExpect(content()
+                            .string(containsString(
+                                    exercise.target() + " successful / " + exercise.attempts() + " attempts")));
+            mockMvc.perform(get(exerciseUrl + "/drawing").with(user(player)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType("image/jpeg"))
+                    .andExpect(content().bytes(new byte[] {0}));
+        }
+        mockMvc.perform(get(location + "/exercises/-3").with(user(player))).andExpect(status().isNotFound());
+
+        Long recorder = kind == SessionKind.JOINT ? 1L : 2L;
+        scores.save(recorder, plan.id(), -1L, new CreateScoreCmd(20, 14));
+        scores.save(recorder, plan.id(), -2L, new CreateScoreCmd(12, 9));
+        assertThat(scores.scores(2L))
+                .extracting(
+                        ScoreDto::planId,
+                        ScoreDto::exerciseId,
+                        ScoreDto::playerId,
+                        ScoreDto::total,
+                        ScoreDto::successful)
+                .containsExactlyInAnyOrder(tuple(plan.id(), -1L, 2L, 20, 14), tuple(plan.id(), -2L, 2L, 12, 9));
     }
 }

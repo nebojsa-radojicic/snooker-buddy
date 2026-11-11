@@ -18,7 +18,7 @@ The actors below are an identified coach and an identified player with an existi
 | UC-006 | Filter Exercises by Predefined Type | COMPLETED |
 | UC-007 | Define Default Exercise Targets | COMPLETED |
 | UC-008 | Assign an Individual Exercise | COMPLETED |
-| UC-009 | Assign a Grouped Training Session | NOT_IMPLEMENTED |
+| UC-009 | Assign a Grouped Training Session | COMPLETED |
 | UC-010 | Personalize Targets for a Player | NOT_IMPLEMENTED |
 | UC-011 | Review Assigned Training | NOT_IMPLEMENTED |
 | UC-012 | Enforce Result Recording Ownership | NOT_IMPLEMENTED |
@@ -154,7 +154,7 @@ Implementation verification: a single exercise selected from the library now def
 
 ### UC-009 — Assign a Grouped Training Session
 
-- **Status:** NOT_IMPLEMENTED
+- **Status:** COMPLETED
 - **Depends On:** UC-003, UC-007
 - **Description:** A coach groups exercises into one training session and assigns the session to an associated player. The mockup distinguishes Training session from Individual exercises.
 - **Acceptance Criteria:**
@@ -165,6 +165,8 @@ Implementation verification: a single exercise selected from the library now def
   - The player can access each included exercise's drawing, description, and goal.
   - An assignment containing no exercises cannot be created.
   - Grouping exercises does not merge their separately recorded performances into one exercise result.
+
+Implementation verification covers both joint and independent grouped assignments through the existing training form. The new database-backed regression checks one session with the intended recipient, each exercise's own targets, access to the assigned drawings and instructions, and distinct saved scores for each exercise. Existing tests cover empty selections. Twenty focused unit and MVC checks passed. The user confirmed that the local full build finished with `BUILD SUCCESS`.
 
 ### UC-010 — Personalize Targets for a Player
 
