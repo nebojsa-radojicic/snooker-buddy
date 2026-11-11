@@ -8,6 +8,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.javacoderarchitect.snookerbuddy.ApplicationProperties;
 import com.javacoderarchitect.snookerbuddy.config.WebSecurityConfig;
+import com.javacoderarchitect.snookerbuddy.exercises.Difficulty;
+import com.javacoderarchitect.snookerbuddy.exercises.ExerciseDto;
+import com.javacoderarchitect.snookerbuddy.exercises.ExerciseType;
 import com.javacoderarchitect.snookerbuddy.users.Role;
 import com.javacoderarchitect.snookerbuddy.users.SecurityUser;
 import java.time.Instant;
@@ -46,6 +49,45 @@ class ScoreControllerTests {
 
     private ScoreDto score() {
         return new ScoreDto(9L, 3L, 7L, 2L, "Player", "Pot", 10, 8, Instant.parse("2026-11-07T12:00:00Z"));
+    }
+
+    @Test
+    void rendersRecordingContextAndSavesUsingTheAssignmentPath() throws Exception {
+        var exercise = new ExerciseDto(7L, "Pot", "Setup", "Goal", Difficulty.EASY, ExerciseType.TECHNIQUE)
+                .withTargets(12, 9, "Use a smooth cue action");
+        when(service.recording(2L, 3L, 7L))
+                .thenReturn(new TrainingPlanDto(
+                        3L,
+                        "Practice",
+                        1L,
+                        "Coach",
+                        2L,
+                        "Player",
+                        AssignmentFormat.TRAINING_SESSION,
+                        SessionKind.INDEPENDENT,
+                        Instant.now(),
+                        List.of(exercise)));
+        String path = "/training/3/exercises/7/scores";
+        mvc.perform(get(path).with(user(player())))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Record result for Pot")))
+                .andExpect(content().string(containsString("Player · Practice · Independent practice")))
+                .andExpect(content().string(containsString("9 successful / 12 attempts")))
+                .andExpect(content().string(containsString("Use a smooth cue action")))
+                .andExpect(content().string(containsString("action=\"" + path + "\"")));
+        when(service.save(2L, 3L, 7L, new CreateScoreCmd(10, 8))).thenReturn(score());
+        mvc.perform(post(path)
+                        .with(user(player()))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("total", "10")
+                        .param("successful", "8")
+                        .param("playerId", "4")
+                        .param("planId", "5")
+                        .param("exerciseId", "6"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/scores"));
+        verify(service).save(2L, 3L, 7L, new CreateScoreCmd(10, 8));
     }
 
     @Test

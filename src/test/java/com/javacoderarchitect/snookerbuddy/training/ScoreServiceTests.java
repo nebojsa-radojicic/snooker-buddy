@@ -67,10 +67,9 @@ class ScoreServiceTests {
     }
 
     @ParameterizedTest
-    @CsvSource({"1,JOINT,ROLE_COACH", "2,INDEPENDENT,ROLE_PLAYER"})
-    void storesScoreForTheAuthorizedRecorder(long userId, SessionKind kind, Role role) {
+    @CsvSource({"1,JOINT", "2,INDEPENDENT"})
+    void storesScoreForTheAuthorizedRecorder(long userId, SessionKind kind) {
         when(training.containing(userId, 3L, 7L)).thenReturn(plan(kind));
-        when(users.hasRole(userId, role)).thenReturn(true);
         when(repository.saveAndFlush(any())).thenAnswer(call -> call.getArgument(0));
         when(training.plan(userId, 3L)).thenReturn(planDto());
         var score = service.save(userId, 3L, 7L, new CreateScoreCmd(10, 0));
@@ -82,10 +81,10 @@ class ScoreServiceTests {
     }
 
     @ParameterizedTest
-    @CsvSource({"1,INDEPENDENT,ROLE_COACH", "2,JOINT,ROLE_PLAYER"})
-    void refusesTheWrongRecorderEvenWhenTheyHaveBothRoles(long userId, SessionKind kind, Role role) {
+    @CsvSource({"1,INDEPENDENT", "2,JOINT"})
+    void refusesTheWrongAssignmentParticipant(long userId, SessionKind kind) {
         when(training.containing(userId, 3L, 7L)).thenReturn(plan(kind));
-        when(users.hasRole(userId, role)).thenReturn(true);
+        assertThatThrownBy(() -> service.recording(userId, 3L, 7L)).isInstanceOf(AccessDeniedException.class);
         assertThatThrownBy(() -> service.save(userId, 3L, 7L, new CreateScoreCmd(10, 8)))
                 .isInstanceOf(AccessDeniedException.class);
         verifyNoInteractions(repository);

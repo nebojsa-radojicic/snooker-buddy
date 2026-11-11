@@ -4,15 +4,20 @@ import com.javacoderarchitect.snookerbuddy.users.AuthUtils;
 import jakarta.validation.Valid;
 import java.net.URI;
 import org.springframework.http.CacheControl;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 class ScoreController {
+    private static final String ASSIGNED_EXERCISE_SCORES = "/training/{planId}/exercises/{exerciseId}/scores";
+
     private final ScoreService service;
 
     ScoreController(ScoreService service) {
@@ -33,7 +38,40 @@ class ScoreController {
                 .body(service.score(AuthUtils.getCurrentUserIdOrThrow(), id));
     }
 
-    @PostMapping("/training/{planId}/exercises/{exerciseId}/scores")
+    @GetMapping(ASSIGNED_EXERCISE_SCORES)
+    String recording(@PathVariable Long planId, @PathVariable Long exerciseId, Model model) {
+        model.addAttribute("result", new CreateScoreCmd(null, null));
+        return recordingForm(AuthUtils.getCurrentUserIdOrThrow(), planId, exerciseId, model);
+    }
+
+    @PostMapping(path = ASSIGNED_EXERCISE_SCORES, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    String submit(
+            @PathVariable Long planId,
+            @PathVariable Long exerciseId,
+            @Valid @ModelAttribute(value = "result", binding = false) CreateScoreCmd cmd,
+            BindingResult errors,
+            Model model,
+            RedirectAttributes redirect) {
+        Long userId = AuthUtils.getCurrentUserIdOrThrow();
+        if (errors.hasErrors()) return recordingForm(userId, planId, exerciseId, model);
+
+        service.save(userId, planId, exerciseId, cmd);
+        redirect.addFlashAttribute("successMessage", "Result saved.");
+        return "redirect:/scores";
+    }
+
+    private String recordingForm(Long userId, Long planId, Long exerciseId, Model model) {
+        var plan = service.recording(userId, planId, exerciseId);
+        var exercise = plan.exercises().stream()
+                .filter(item -> item.id().equals(exerciseId))
+                .findFirst()
+                .orElseThrow();
+        model.addAttribute("plan", plan);
+        model.addAttribute("exercise", exercise);
+        return "training/record-result";
+    }
+
+    @PostMapping(ASSIGNED_EXERCISE_SCORES)
     @ResponseBody
     ResponseEntity<ScoreDto> save(
             @PathVariable Long planId, @PathVariable Long exerciseId, @Valid @RequestBody CreateScoreCmd cmd) {

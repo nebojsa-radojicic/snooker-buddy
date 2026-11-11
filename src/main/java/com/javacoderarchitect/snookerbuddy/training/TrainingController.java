@@ -97,7 +97,9 @@ class TrainingController {
     String exercise(@PathVariable Long id, @PathVariable Long exerciseId, Model model) {
         Long userId = AuthUtils.getCurrentUserIdOrThrow();
         model.addAttribute("exercise", service.exercise(userId, id, exerciseId));
-        model.addAttribute("plan", service.plan(userId, id));
+        var plan = service.plan(userId, id);
+        model.addAttribute("plan", plan);
+        model.addAttribute("canRecord", plan.kind().allowsRecordingBy(userId, plan.coachId(), plan.playerId()));
         return "training/exercise";
     }
 

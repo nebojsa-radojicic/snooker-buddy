@@ -21,7 +21,7 @@ The actors below are an identified coach and an identified player with an existi
 | UC-009 | Assign a Grouped Training Session | COMPLETED |
 | UC-010 | Personalize Targets for a Player | COMPLETED |
 | UC-011 | Review Assigned Training | COMPLETED |
-| UC-012 | Enforce Result Recording Ownership | NOT_IMPLEMENTED |
+| UC-012 | Enforce Result Recording Ownership | COMPLETED |
 | UC-013 | Record an Exercise Result as a Summary | NOT_IMPLEMENTED |
 | UC-014 | Record an Exercise Result Attempt by Attempt | NOT_IMPLEMENTED |
 | UC-015 | Review Completed Training and Results | NOT_IMPLEMENTED |
@@ -202,7 +202,7 @@ Implementation verification covers the existing training list, plan details, and
 
 ### UC-012 — Enforce Result Recording Ownership
 
-- **Status:** NOT_IMPLEMENTED
+- **Status:** COMPLETED
 - **Depends On:** UC-011
 - **Description:** The authorized recorder records a player's performance in its practice context: the coach records joint sessions and the player records independent sessions. The mockup indicates the responsible recorder and retains assignment context through result entry.
 - **Acceptance Criteria:**
@@ -215,6 +215,8 @@ Implementation verification covers the existing training list, plan details, and
   - Result entry from an assignment preserves that assignment's context and applicable targets.
   - An exercise not included in the selected assignment cannot receive a result under that assignment.
   - Rejecting an unauthorized recording does not add a performance to history.
+
+The assigned exercise page links to result entry for the responsible recorder. The form shows the player, exercise, practice type, and assignment-specific targets and success criterion. Opening the form and saving a result use the same assignment access and recording rules. All 38 focused tests passed in the agent environment. The user confirmed that their full local build finished with `BUILD SUCCESS`, completing verification.
 
 ### UC-013 — Record an Exercise Result as a Summary
 

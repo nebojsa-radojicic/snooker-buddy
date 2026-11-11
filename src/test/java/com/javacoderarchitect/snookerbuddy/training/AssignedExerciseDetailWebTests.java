@@ -51,8 +51,14 @@ class AssignedExerciseDetailWebTests {
     }
 
     @ParameterizedTest
-    @CsvSource({"1,ROLE_COACH", "2,ROLE_PLAYER"})
-    void coachAndAssignedPlayerCanReadInstructionsGoalLabelsAndThePlanDrawing(long viewer, Role role) throws Exception {
+    @CsvSource({
+        "1,ROLE_COACH,INDEPENDENT,false",
+        "2,ROLE_PLAYER,INDEPENDENT,true",
+        "1,ROLE_COACH,JOINT,true",
+        "2,ROLE_PLAYER,JOINT,false"
+    })
+    void bothParticipantsCanReviewTheExerciseButOnlyTheRecorderGetsTheLink(
+            long viewer, Role role, SessionKind kind, boolean canRecord) throws Exception {
         var exercise = new ExerciseDto(
                 9L,
                 "The stop shot",
@@ -70,7 +76,7 @@ class AssignedExerciseDetailWebTests {
                 2L,
                 "Player",
                 AssignmentFormat.TRAINING_SESSION,
-                SessionKind.INDEPENDENT,
+                kind,
                 Instant.now(),
                 List.of(exercise));
         when(service.exercise(viewer, 5L, 9L)).thenReturn(exercise);
@@ -78,6 +84,7 @@ class AssignedExerciseDetailWebTests {
         var drawing = new ExerciseDrawingDto(new byte[] {4, 5, 6}, "image/jpeg");
         when(service.drawing(viewer, 5L, 9L)).thenReturn(drawing);
         var principal = account(viewer, role);
+        var recordLink = containsString("href=\"/training/5/exercises/9/scores\"");
         mvc.perform(get("/training/5/exercises/9").with(user(principal)))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("The stop shot")))
@@ -86,6 +93,7 @@ class AssignedExerciseDetailWebTests {
                 .andExpect(content().string(containsString("src=\"/training/5/exercises/9/drawing\"")))
                 .andExpect(content().string(containsString("Exercise type: <span>Cue-ball control</span>")))
                 .andExpect(content().string(containsString("Exercise difficulty: <span>Hard</span>")))
+                .andExpect(content().string(canRecord ? recordLink : not(recordLink)))
                 .andExpect(content().string(not(containsString("Player level"))));
         mvc.perform(get("/training/5/exercises/9/drawing").with(user(principal)))
                 .andExpect(status().isOk())

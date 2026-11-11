@@ -23,6 +23,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 @Sql({"/test-data.sql", "/exercise-search-data.sql", "/training-data.sql"})
 class AccessBoundariesTests extends BaseIT {
@@ -229,6 +230,54 @@ class AccessBoundariesTests extends BaseIT {
                         .content("{\"total\":10,\"successful\":8}"))
                 .andExpect(status().isNotFound());
         assertThat(repository.count()).isZero();
+    }
+
+    @Test
+    void onlyTheResponsibleParticipantCanOpenAndSubmitTheRecordingForm() throws Exception {
+        var coach = account(1, Role.ROLE_COACH);
+        var player = account(2, Role.ROLE_COACH, Role.ROLE_PLAYER);
+        var outsider = account(4, Role.ROLE_PLAYER);
+        Long joint = plan(2L, SessionKind.JOINT);
+        Long independent = plan(2L, SessionKind.INDEPENDENT);
+
+        for (Long id : List.of(joint, independent)) {
+            var recorder = id.equals(joint) ? coach : player;
+            var viewer = id.equals(joint) ? player : coach;
+            String exercisePath = "/training/" + id + "/exercises/-1";
+            String recordingPath = exercisePath + "/scores";
+            mvc.perform(get(exercisePath).with(user(recorder)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(containsString("href=\"" + recordingPath + "\"")));
+            mvc.perform(get(exercisePath).with(user(viewer)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(not(containsString("href=\"" + recordingPath + "\""))));
+            mvc.perform(get(recordingPath).with(user(recorder))).andExpect(status().isOk());
+            mvc.perform(get(recordingPath).with(user(viewer))).andExpect(status().isForbidden());
+            mvc.perform(get(recordingPath).with(user(outsider))).andExpect(status().isNotFound());
+
+            long scoresBefore = repository.count();
+            mvc.perform(scoreForm(recordingPath, viewer)).andExpect(status().isForbidden());
+            mvc.perform(scoreForm(recordingPath, outsider)).andExpect(status().isNotFound());
+            mvc.perform(scoreForm("/training/" + id + "/exercises/-2/scores", recorder))
+                    .andExpect(status().isNotFound());
+            assertThat(repository.count()).isEqualTo(scoresBefore);
+
+            mvc.perform(scoreForm(recordingPath, recorder))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(redirectedUrl("/scores"));
+        }
+        assertThat(repository.findAll())
+                .extracting(ScoreEntity::getPlanId)
+                .containsExactlyInAnyOrder(joint, independent);
+    }
+
+    private MockHttpServletRequestBuilder scoreForm(String path, SecurityUser recorder) {
+        return post(path)
+                .with(user(recorder))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("total", "10")
+                .param("successful", "8");
     }
 
     @ParameterizedTest

@@ -26,15 +26,23 @@ class ScoreService {
 
     @Transactional
     public ScoreDto save(Long userId, Long planId, Long exerciseId, @Valid CreateScoreCmd cmd) {
+        requireRecorder(userId, planId, exerciseId);
+        var score = repository.saveAndFlush(new ScoreEntity(planId, exerciseId, cmd.total(), cmd.successful()));
+        return dto(userId, score);
+    }
+
+    @Transactional(readOnly = true)
+    public TrainingPlanDto recording(Long userId, Long planId, Long exerciseId) {
+        requireRecorder(userId, planId, exerciseId);
+        return training.plan(userId, planId);
+    }
+
+    private void requireRecorder(Long userId, Long planId, Long exerciseId) {
         var plan = training.containing(userId, planId, exerciseId);
-        boolean coach = plan.getCoachId().equals(userId) && users.hasRole(userId, Role.ROLE_COACH);
-        boolean player = plan.getPlayerId().equals(userId) && users.hasRole(userId, Role.ROLE_PLAYER);
-        if (!(coach && plan.getKind() == SessionKind.JOINT) && !(player && plan.getKind() == SessionKind.INDEPENDENT)) {
+        if (!plan.getKind().allowsRecordingBy(userId, plan.getCoachId(), plan.getPlayerId())) {
             throw new AccessDeniedException(
                     "Coaches record joint practice; players record their own independent practice.");
         }
-        var score = repository.saveAndFlush(new ScoreEntity(planId, exerciseId, cmd.total(), cmd.successful()));
-        return dto(userId, score);
     }
 
     @Transactional(readOnly = true)
