@@ -24,7 +24,7 @@ The actors below are an identified coach and an identified player with an existi
 | UC-012 | Enforce Result Recording Ownership | COMPLETED |
 | UC-013 | Record an Exercise Result as a Summary | COMPLETED |
 | UC-014 | Record an Exercise Result Attempt by Attempt | COMPLETED |
-| UC-015 | Review Completed Training and Results | NOT_IMPLEMENTED |
+| UC-015 | Review Completed Training and Results | COMPLETED |
 | UC-016 | Review Separate Performances of a Repeated Exercise | NOT_IMPLEMENTED |
 
 ## Detailed Use Cases
@@ -255,7 +255,7 @@ The result form offers attempt-by-attempt entry alongside Summary. The live tall
 
 ### UC-015 — Review Completed Training and Results
 
-- **Status:** NOT_IMPLEMENTED
+- **Status:** COMPLETED
 - **Depends On:** UC-013, UC-014
 - **Description:** Coaches and players review recorded work and exercise results in training history. The mockup provides Training history, My results, and a player-specific history entry point from My players.
 - **Acceptance Criteria:**
@@ -267,6 +267,8 @@ The result form offers attempt-by-attempt entry alongside Summary. The live tall
   - Reviewing history does not alter stored performance counts.
   - A player with no recorded performances has no fabricated results displayed.
   - Recorded results describe exercise performance without assigning an overall player category or promotion.
+
+Training history shows saved performances from both recording modes. A coach can open the history of an associated player from My players. The filtered view uses the same read-only results list and shows an empty state when the player has no recorded performances. All 41 focused tests passed in the agent environment. The user confirmed that their full local build finished with `BUILD SUCCESS`, completing verification.
 
 ### UC-016 — Review Separate Performances of a Repeated Exercise
 

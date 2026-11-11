@@ -8,11 +8,13 @@ import com.javacoderarchitect.snookerbuddy.exercises.Difficulty;
 import com.javacoderarchitect.snookerbuddy.exercises.ExerciseDto;
 import com.javacoderarchitect.snookerbuddy.exercises.ExerciseType;
 import com.javacoderarchitect.snookerbuddy.users.Role;
+import com.javacoderarchitect.snookerbuddy.users.UserDto;
 import com.javacoderarchitect.snookerbuddy.users.UsersAPI;
 import jakarta.validation.Validation;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,13 +35,16 @@ class ScoreServiceTests {
     private TrainingService training;
 
     @Mock
+    private PlayerService players;
+
+    @Mock
     private UsersAPI users;
 
     private ScoreService service;
 
     @BeforeEach
     void setUp() {
-        service = new ScoreService(repository, training, users);
+        service = new ScoreService(repository, training, players, users);
     }
 
     private TrainingPlanEntity plan(SessionKind kind) {
@@ -118,11 +123,34 @@ class ScoreServiceTests {
     void listsOnlyScoresAllowedByTheAccountsRoles() {
         when(users.hasRole(2L, Role.ROLE_COACH)).thenReturn(true);
         when(users.hasRole(2L, Role.ROLE_PLAYER)).thenReturn(true);
-        when(repository.findVisible(2L, true, true)).thenReturn(List.of(new ScoreEntity(3L, 7L, 10, 8)));
+        when(repository.findVisible(2L, true, true, null)).thenReturn(List.of(new ScoreEntity(3L, 7L, 10, 8)));
         when(training.plan(2L, 3L)).thenReturn(planDto());
         assertThat(service.scores(2L))
                 .singleElement()
                 .satisfies(score -> assertThat(score.successful()).isEqualTo(8));
+    }
+
+    @Test
+    void showsEmptyHistoryForAnAssociatedPlayer() {
+        when(players.isPlayer(1L, 2L)).thenReturn(true);
+        when(users.findById(2L))
+                .thenReturn(Optional.of(
+                        new UserDto(2L, "Player", "player@example.com", Set.of(Role.ROLE_PLAYER), Instant.now())));
+        var history = service.playerHistory(1L, 2L);
+        assertThat(history.playerName()).isEqualTo("Player");
+        assertThat(history.scores()).isEmpty();
+        verify(users).requireRole(1L, Role.ROLE_COACH);
+        verify(repository).findVisible(1L, true, false, 2L);
+        verifyNoMoreInteractions(repository);
+    }
+
+    @Test
+    void refusesPlayerHistoryOutsideTheCoachsRosterBeforeLookingUpResults() {
+        assertThatThrownBy(() -> service.playerHistory(1L, 4L))
+                .isInstanceOfSatisfying(
+                        ResponseStatusException.class,
+                        ex -> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
+        verifyNoInteractions(repository, training);
     }
 
     @ParameterizedTest

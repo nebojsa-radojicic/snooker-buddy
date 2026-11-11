@@ -314,6 +314,41 @@ class AccessBoundariesTests extends BaseIT {
                 .andExpect(content().string(containsString("0 / 3")));
     }
 
+    @Test
+    void historyShowsBothPracticeKindsAndFiltersByRosterWithoutChangingResults() throws Exception {
+        var coach = account(1, Role.ROLE_COACH);
+        var player = account(2, Role.ROLE_PLAYER);
+        players.add(1L, "newplayer@example.com");
+        Long joint = plan(2L, SessionKind.JOINT);
+        Long independent = plan(2L, SessionKind.INDEPENDENT);
+        Long other = plan(5L, SessionKind.JOINT);
+        scores.save(1L, joint, -1L, new CreateScoreCmd(7, 4));
+        scores.save(2L, independent, -1L, new CreateScoreCmd(3, 0));
+        scores.save(1L, other, -1L, new CreateScoreCmd(5, 2));
+        var before = scores.scores(1L);
+
+        mvc.perform(get("/players").with(user(coach)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("href=\"/scores?playerId=2\"")));
+        for (var request : List.of(
+                get("/scores").param("playerId", "2").with(user(coach)),
+                get("/scores").with(user(player)))) {
+            mvc.perform(request)
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(containsString("Demo User")))
+                    .andExpect(content().string(containsString("Straight pot")))
+                    .andExpect(content().string(containsString(">Joint<")))
+                    .andExpect(content().string(containsString(">Independent<")))
+                    .andExpect(content().string(containsString(">4 / 7<")))
+                    .andExpect(content().string(containsString(">0 / 3<")))
+                    .andExpect(content().string(not(containsString(">2 / 5<"))));
+        }
+        mvc.perform(get("/scores").param("playerId", "4").with(user(coach))).andExpect(status().isNotFound());
+        mvc.perform(get("/scores").param("playerId", "5").with(user(account(4, Role.ROLE_PLAYER))))
+                .andExpect(status().isForbidden());
+        assertThat(scores.scores(1L)).containsExactlyElementsOf(before);
+    }
+
     @ParameterizedTest
     @ValueSource(
             strings = {

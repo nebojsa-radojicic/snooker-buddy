@@ -16,11 +16,13 @@ import org.springframework.web.server.ResponseStatusException;
 class ScoreService {
     private final ScoreRepository repository;
     private final TrainingService training;
+    private final PlayerService players;
     private final UsersAPI users;
 
-    ScoreService(ScoreRepository repository, TrainingService training, UsersAPI users) {
+    ScoreService(ScoreRepository repository, TrainingService training, PlayerService players, UsersAPI users) {
         this.repository = repository;
         this.training = training;
+        this.players = players;
         this.users = users;
     }
 
@@ -47,12 +49,29 @@ class ScoreService {
 
     @Transactional(readOnly = true)
     public List<ScoreDto> scores(Long userId) {
-        return repository
-                .findVisible(userId, users.hasRole(userId, Role.ROLE_COACH), users.hasRole(userId, Role.ROLE_PLAYER))
-                .stream()
+        return visibleScores(
+                userId, users.hasRole(userId, Role.ROLE_COACH), users.hasRole(userId, Role.ROLE_PLAYER), null);
+    }
+
+    @Transactional(readOnly = true)
+    public PlayerHistory playerHistory(Long coachId, Long playerId) {
+        users.requireRole(coachId, Role.ROLE_COACH);
+        if (!players.isPlayer(coachId, playerId)) throw playerNotFound();
+        var player = users.findById(playerId).orElseThrow(this::playerNotFound);
+        return new PlayerHistory(player.name(), visibleScores(coachId, true, false, playerId));
+    }
+
+    private List<ScoreDto> visibleScores(Long userId, boolean coach, boolean player, Long selectedPlayerId) {
+        return repository.findVisible(userId, coach, player, selectedPlayerId).stream()
                 .map(score -> dto(userId, score))
                 .toList();
     }
+
+    private ResponseStatusException playerNotFound() {
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found");
+    }
+
+    record PlayerHistory(String playerName, List<ScoreDto> scores) {}
 
     @Transactional(readOnly = true)
     public ScoreDto score(Long userId, Long id) {

@@ -1,10 +1,16 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
-<head><title>Scores</title></head><body>
-<span layout:fragment="pageTitle">Scores</span>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>Training history</title></head><body>
+<span layout:fragment="pageTitle">Training history</span>
 <div layout:fragment="content">
-<h1 class="page-title">Scores</h1>
-<p class="page-subtitle">Your practice results and results for the players you coach.</p>
+<div th:if="${playerName != null}">
+    <a class="text-link" th:href="@{/scores}">← All training history</a>
+    <h1 class="page-title mt-3" th:text="|${playerName} · Training history|"></h1>
+</div>
+<div th:unless="${playerName != null}">
+    <h1 class="page-title" sec:authorize="hasRole('COACH')">Training history</h1>
+    <h1 class="page-title" sec:authorize="!hasRole('COACH')">My results</h1>
+</div>
 <section th:if="${scores.isEmpty()}" class="panel empty-state"><h2 class="font-bold">No scores recorded yet</h2></section>
 <div class="table-wrap panel mt-5" th:unless="${scores.isEmpty()}">
 <table class="w-full text-left"><thead><tr><th>Player</th><th>Exercise</th><th>Practice type</th><th>Actual successful / total attempts</th><th>Recorded</th></tr></thead>

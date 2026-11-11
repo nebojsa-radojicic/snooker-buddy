@@ -1,6 +1,7 @@
 package com.javacoderarchitect.snookerbuddy.training;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -159,6 +160,7 @@ class ScoreControllerTests {
         when(service.score(2L, 9L)).thenReturn(score());
         mvc.perform(get("/scores").with(user(player())))
                 .andExpect(status().isOk())
+                .andExpect(content().string(containsString("My results")))
                 .andExpect(content().string(containsString("Actual successful / total attempts")))
                 .andExpect(content().string(containsString("Independent")))
                 .andExpect(content().string(containsString("8 / 10")));
@@ -167,6 +169,18 @@ class ScoreControllerTests {
                 .andExpect(jsonPath("$.exerciseId").value(7))
                 .andExpect(jsonPath("$.kind").value("INDEPENDENT"))
                 .andExpect(header().string("Cache-Control", "no-store"));
+    }
+
+    @Test
+    void showsTheSelectedPlayersEmptyHistoryWithoutResultRows() throws Exception {
+        var coach = new SecurityUser(1L, "Coach", "coach@example.com", "unused", Role.ROLE_COACH);
+        when(service.playerHistory(1L, 2L)).thenReturn(new ScoreService.PlayerHistory("Player", List.of()));
+        mvc.perform(get("/scores").param("playerId", "2").with(user(coach)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Player · Training history")))
+                .andExpect(content().string(containsString("No scores recorded yet")))
+                .andExpect(content().string(not(containsString("<table"))));
+        verify(service, never()).scores(anyLong());
     }
 
     @Test

@@ -31,8 +31,15 @@ class ScoreController {
     }
 
     @GetMapping("/scores")
-    String scores(Model model) {
-        model.addAttribute("scores", service.scores(AuthUtils.getCurrentUserIdOrThrow()));
+    String scores(@RequestParam(required = false) Long playerId, Model model) {
+        Long userId = AuthUtils.getCurrentUserIdOrThrow();
+        if (playerId == null) {
+            model.addAttribute("scores", service.scores(userId));
+        } else {
+            var history = service.playerHistory(userId, playerId);
+            model.addAttribute("playerName", history.playerName());
+            model.addAttribute("scores", history.scores());
+        }
         return "training/scores";
     }
 
