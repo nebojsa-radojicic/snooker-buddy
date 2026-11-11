@@ -3,12 +3,18 @@ package com.javacoderarchitect.snookerbuddy.training;
 import com.javacoderarchitect.snookerbuddy.users.AuthUtils;
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.util.stream.Collectors;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.CacheControl;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
@@ -89,11 +95,17 @@ class ScoreController {
         return view;
     }
 
-    @ExceptionHandler({
-        org.springframework.web.bind.MethodArgumentNotValidException.class,
-        org.springframework.http.converter.HttpMessageNotReadableException.class
-    })
-    ResponseEntity<Void> invalid() {
-        return ResponseEntity.badRequest().build();
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    ProblemDetail invalidCounts(MethodArgumentNotValidException ex) {
+        String detail = ex.getBindingResult().getAllErrors().stream()
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                .collect(Collectors.joining(" "));
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ProblemDetail unreadableCounts() {
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, "Send valid JSON with whole numbers for total and successful attempts.");
     }
 }

@@ -7,10 +7,11 @@
 <p class="page-subtitle">Your practice results and results for the players you coach.</p>
 <section th:if="${scores.isEmpty()}" class="panel empty-state"><h2 class="font-bold">No scores recorded yet</h2></section>
 <div class="table-wrap panel mt-5" th:unless="${scores.isEmpty()}">
-<table class="w-full text-left"><thead><tr><th>Player</th><th>Exercise</th><th>Successful / total</th><th>Recorded</th></tr></thead>
+<table class="w-full text-left"><thead><tr><th>Player</th><th>Exercise</th><th>Practice type</th><th>Actual successful / total attempts</th><th>Recorded</th></tr></thead>
 <tbody><tr th:each="score : ${scores}">
 <td th:text="${score.playerName}"></td>
 <td><a class="text-link" th:href="@{/training/{planId}/exercises/{exerciseId}(planId=${score.planId},exerciseId=${score.exerciseId})}" th:text="${score.exerciseName}"></a></td>
+<td th:text="${score.kind.label}"></td>
 <td th:text="${score.successful + ' / ' + score.total}"></td>
 <td th:text="${#temporals.format(score.createdAt, 'dd MMM yyyy HH:mm', 'UTC')}"></td>
 </tr></tbody></table>

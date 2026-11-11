@@ -280,6 +280,40 @@ class AccessBoundariesTests extends BaseIT {
                 .param("successful", "8");
     }
 
+    @Test
+    void savesZeroSuccessesWithTheActualTotalAndShowsTheAssignmentContextInScores() throws Exception {
+        Long id = plan(2L, SessionKind.INDEPENDENT);
+        var player = account(2, Role.ROLE_PLAYER);
+        String exercisePath = "/training/" + id + "/exercises/-1";
+        String recordingPath = exercisePath + "/scores";
+        mvc.perform(get(recordingPath).with(user(player)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("8 successful / 10 attempts")));
+
+        mvc.perform(post(recordingPath)
+                        .with(user(player))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("total", "3")
+                        .param("successful", "0"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/scores"));
+
+        assertThat(repository.findAll()).singleElement().satisfies(score -> {
+            assertThat(score.getPlanId()).isEqualTo(id);
+            assertThat(score.getExerciseId()).isEqualTo(-1L);
+            assertThat(score.getTotal()).isEqualTo(3);
+            assertThat(score.getSuccessful()).isZero();
+        });
+        mvc.perform(get("/scores").with(user(player)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Demo User")))
+                .andExpect(content().string(containsString("Straight pot")))
+                .andExpect(content().string(containsString("href=\"" + exercisePath + "\"")))
+                .andExpect(content().string(containsString("Independent")))
+                .andExpect(content().string(containsString("0 / 3")));
+    }
+
     @ParameterizedTest
     @ValueSource(
             strings = {

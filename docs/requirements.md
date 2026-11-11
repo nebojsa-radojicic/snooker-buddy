@@ -22,7 +22,7 @@ The actors below are an identified coach and an identified player with an existi
 | UC-010 | Personalize Targets for a Player | COMPLETED |
 | UC-011 | Review Assigned Training | COMPLETED |
 | UC-012 | Enforce Result Recording Ownership | COMPLETED |
-| UC-013 | Record an Exercise Result as a Summary | NOT_IMPLEMENTED |
+| UC-013 | Record an Exercise Result as a Summary | COMPLETED |
 | UC-014 | Record an Exercise Result Attempt by Attempt | NOT_IMPLEMENTED |
 | UC-015 | Review Completed Training and Results | NOT_IMPLEMENTED |
 | UC-016 | Review Separate Performances of a Repeated Exercise | NOT_IMPLEMENTED |
@@ -220,7 +220,7 @@ The assigned exercise page links to result entry for the responsible recorder. T
 
 ### UC-013 — Record an Exercise Result as a Summary
 
-- **Status:** NOT_IMPLEMENTED
+- **Status:** COMPLETED
 - **Depends On:** UC-012
 - **Description:** The authorized recorder enters successful versus total attempts after performing an exercise. The mockup's Summary mode illustrates this entry path.
 - **Acceptance Criteria:**
@@ -232,6 +232,8 @@ The assigned exercise page links to result entry for the responsible recorder. T
   - Invalid counts prevent saving and identify the validation problem.
   - A valid saved summary retains its player, exercise, and practice context for history review.
   - Recording successful versus total attempts does not require entering optional consecutive-success or time measures.
+
+Summary entry validates both counts and explains invalid input. The Scores page shows the actual counts, player, exercise, and practice type, with a link to the assigned exercise. All 36 focused tests passed in the agent environment. The user confirmed that their full local build finished with `BUILD SUCCESS`, completing verification.
 
 ### UC-014 — Record an Exercise Result Attempt by Attempt
 

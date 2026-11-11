@@ -76,6 +76,7 @@ class ScoreService {
                 plan.playerId(),
                 plan.playerName(),
                 exercise.name(),
+                plan.kind(),
                 score.getTotal(),
                 score.getSuccessful(),
                 score.getCreatedAt());

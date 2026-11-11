@@ -9,6 +9,7 @@ public record ScoreDto(
         Long playerId,
         String playerName,
         String exerciseName,
+        SessionKind kind,
         int total,
         int successful,
         Instant createdAt) {}
