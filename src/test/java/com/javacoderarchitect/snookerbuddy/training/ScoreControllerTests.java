@@ -80,7 +80,10 @@ class ScoreControllerTests {
                 .andExpect(content().string(containsString("Player · Practice · Independent practice")))
                 .andExpect(content().string(containsString("9 successful / 12 attempts")))
                 .andExpect(content().string(containsString("Use a smooth cue action")))
-                .andExpect(content().string(containsString("action=\"" + path + "\"")));
+                .andExpect(content().string(containsString("action=\"" + path + "\"")))
+                .andExpect(content().string(containsString("Attempt by attempt")))
+                .andExpect(content().string(containsString("id=\"attempt-tally\">0 / 0")))
+                .andExpect(content().string(containsString("src=\"/js/record-result.js\"")));
         mvc.perform(post(path)
                         .with(user(player()))
                         .with(csrf())
@@ -93,6 +96,21 @@ class ScoreControllerTests {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/scores"));
         verify(service).save(2L, 3L, 7L, new CreateScoreCmd(10, 0));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"3,2", "1,0"})
+    void savesTheAttemptTallyAsOneResultForTheAssignedExercise(int total, int successful) throws Exception {
+        mvc.perform(post("/training/3/exercises/7/scores")
+                        .with(user(player()))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("total", String.valueOf(total))
+                        .param("successful", String.valueOf(successful)))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/scores"))
+                .andExpect(flash().attribute("successMessage", "Result saved."));
+        verify(service).save(2L, 3L, 7L, new CreateScoreCmd(total, successful));
     }
 
     @ParameterizedTest

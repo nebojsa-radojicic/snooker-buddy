@@ -11,12 +11,18 @@
             <p>Planned target <strong th:text="|${exercise.target} successful / ${exercise.attempts} attempts|"></strong></p>
             <p class="exercise-text mt-2" th:text="${exercise.goal}"></p>
         </div>
-        <form class="space-y-5 mt-5" method="post" th:object="${result}"
+        <form id="record-result-form" class="space-y-5 mt-5" method="post" th:object="${result}"
               th:action="@{/training/{planId}/exercises/{exerciseId}/scores(planId=${plan.id},exerciseId=${exercise.id})}">
             <div class="notice notice-error" role="alert" th:if="${#fields.hasAnyErrors()}">
                 <ul><li th:each="error : ${#fields.allErrors()}" th:text="${error}"></li></ul>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div id="recording-modes" class="flex flex-wrap gap-2" role="group" aria-label="Recording mode" hidden>
+                <button id="summary-mode" type="button" class="btn btn-green" aria-pressed="true"
+                        aria-controls="summary-counts">Summary</button>
+                <button id="attempt-mode" type="button" class="btn btn-light" aria-pressed="false"
+                        aria-controls="attempt-counts">Attempt by attempt</button>
+            </div>
+            <fieldset id="summary-counts" class="grid grid-cols-1 sm:grid-cols-2 gap-4" aria-label="Summary counts">
                 <div>
                     <label class="field-label" for="total">Total attempts performed</label>
                     <input class="field" type="number" th:field="*{total}" min="1" step="1" required />
@@ -25,9 +31,21 @@
                     <label class="field-label" for="successful">Successful attempts</label>
                     <input class="field" type="number" th:field="*{successful}" min="0" step="1" required />
                 </div>
-            </div>
+            </fieldset>
+            <fieldset id="attempt-counts" class="space-y-4" aria-label="Attempt counts" hidden disabled>
+                <p class="notice" role="status" aria-atomic="true">
+                    <strong id="attempt-tally">0 / 0</strong> successful / total attempts
+                </p>
+                <div class="flex flex-wrap gap-2">
+                    <button id="successful-attempt" type="button" class="btn btn-green">Successful</button>
+                    <button id="missed-attempt" type="button" class="btn btn-light">Missed</button>
+                </div>
+                <input id="attempt-total" type="hidden" name="total" value="0" />
+                <input id="attempt-successful" type="hidden" name="successful" value="0" />
+            </fieldset>
             <button type="submit" class="btn btn-primary">Save result</button>
         </form>
     </section>
 </div>
+<th:block layout:fragment="pageScripts"><script defer th:src="@{/js/record-result.js}"></script></th:block>
 </body></html>

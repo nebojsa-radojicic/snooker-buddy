@@ -23,7 +23,7 @@ The actors below are an identified coach and an identified player with an existi
 | UC-011 | Review Assigned Training | COMPLETED |
 | UC-012 | Enforce Result Recording Ownership | COMPLETED |
 | UC-013 | Record an Exercise Result as a Summary | COMPLETED |
-| UC-014 | Record an Exercise Result Attempt by Attempt | NOT_IMPLEMENTED |
+| UC-014 | Record an Exercise Result Attempt by Attempt | COMPLETED |
 | UC-015 | Review Completed Training and Results | NOT_IMPLEMENTED |
 | UC-016 | Review Separate Performances of a Repeated Exercise | NOT_IMPLEMENTED |
 
@@ -237,7 +237,7 @@ Summary entry validates both counts and explains invalid input. The Scores page 
 
 ### UC-014 — Record an Exercise Result Attempt by Attempt
 
-- **Status:** NOT_IMPLEMENTED
+- **Status:** COMPLETED
 - **Depends On:** UC-012
 - **Description:** The authorized recorder records each attempt as successful or unsuccessful during exercise performance. The mockup's Attempt by attempt mode illustrates the alternative to summary entry.
 - **Acceptance Criteria:**
@@ -250,6 +250,8 @@ Summary entry validates both counts and explains invalid input. The Scores page 
   - A performance containing no attempts cannot be saved as a completed result.
   - Saving retains the accumulated counts with the player, exercise, and practice context for history review.
   - Attempt entry does not require entering optional consecutive-success or time measures.
+
+The result form offers attempt-by-attempt entry alongside Summary. The live tally counts successful and missed attempts and uses the existing authorized score submission to save one result for the assigned exercise. Browser checks verified the tally, mode switching, empty submission prevention, and submitted counts for mixed and all-missed practice. All 43 focused Maven tests passed in the agent environment. The user confirmed that their full local build finished with `BUILD SUCCESS`, completing verification.
 
 ### UC-015 — Review Completed Training and Results
 
