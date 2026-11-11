@@ -46,7 +46,8 @@ class TrainingService {
                 .map(exercise -> new TrainingPlanExercise(
                         exercise.id(),
                         cmd.customTargets() ? cmd.attempts() : exercise.attempts(),
-                        cmd.customTargets() ? cmd.target() : exercise.target()))
+                        cmd.customTargets() ? cmd.target() : exercise.target(),
+                        cmd.successCriteria().get(exercise.id())))
                 .toList();
         if (cmd.format() == AssignmentFormat.INDIVIDUAL_EXERCISES) {
             return java.util.stream.IntStream.range(0, selected.size())
@@ -136,6 +137,9 @@ class TrainingService {
                 .filter(item -> item.getExerciseId().equals(exercise.id()))
                 .findFirst()
                 .orElseThrow();
-        return exercise.withTargets(assigned.getAttempts(), assigned.getTarget());
+        return exercise.withTargets(
+                assigned.getAttempts(),
+                assigned.getTarget(),
+                assigned.getSuccessCriterion() == null ? exercise.goal() : assigned.getSuccessCriterion());
     }
 }

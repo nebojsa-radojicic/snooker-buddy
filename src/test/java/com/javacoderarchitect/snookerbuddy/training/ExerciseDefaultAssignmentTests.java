@@ -80,13 +80,17 @@ class ExerciseDefaultAssignmentTests {
                         List.of(7L, 8L),
                         true,
                         30,
-                        22));
+                        22,
+                        java.util.Map.of(7L, "Pot without touching a cushion.")));
         var saved = ArgumentCaptor.forClass(TrainingPlanEntity.class);
         verify(repository).save(saved.capture());
         assertThat(saved.getValue().getExercises()).allSatisfy(item -> {
             assertThat(item.getAttempts()).isEqualTo(30);
             assertThat(item.getTarget()).isEqualTo(22);
         });
+        assertThat(saved.getValue().getExercises())
+                .extracting(TrainingPlanExercise::getSuccessCriterion)
+                .containsExactly("Pot without touching a cushion.", null);
         assertThat(library).extracting(ExerciseDto::attempts).containsExactly(20, 12);
         assertThat(library).extracting(ExerciseDto::target).containsExactly(15, 9);
     }
@@ -99,7 +103,7 @@ class ExerciseDefaultAssignmentTests {
                 "Practice",
                 AssignmentFormat.TRAINING_SESSION,
                 SessionKind.INDEPENDENT,
-                List.of(new TrainingPlanExercise(7L, 20, 15)));
+                List.of(new TrainingPlanExercise(7L, 20, 15, "Pot without touching a cushion.")));
         when(repository.findById(3L)).thenReturn(Optional.of(plan));
         when(users.hasRole(2L, com.javacoderarchitect.snookerbuddy.users.Role.ROLE_PLAYER))
                 .thenReturn(true);
@@ -108,5 +112,6 @@ class ExerciseDefaultAssignmentTests {
         var assigned = service.exercise(2L, 3L, 7L);
         assertThat(assigned.attempts()).isEqualTo(20);
         assertThat(assigned.target()).isEqualTo(15);
+        assertThat(assigned.goal()).isEqualTo("Pot without touching a cushion.");
     }
 }

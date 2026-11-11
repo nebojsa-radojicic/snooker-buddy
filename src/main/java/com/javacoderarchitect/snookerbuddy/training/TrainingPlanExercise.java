@@ -14,12 +14,20 @@ class TrainingPlanExercise {
     @Column(nullable = false)
     private int target;
 
+    @Column(name = "success_criterion", length = 2000)
+    private String successCriterion;
+
     protected TrainingPlanExercise() {}
 
     TrainingPlanExercise(Long exerciseId, int attempts, int target) {
+        this(exerciseId, attempts, target, null);
+    }
+
+    TrainingPlanExercise(Long exerciseId, int attempts, int target, String successCriterion) {
         this.exerciseId = exerciseId;
         this.attempts = attempts;
         this.target = target;
+        this.successCriterion = successCriterion;
     }
 
     public Long getExerciseId() {
@@ -32,5 +40,9 @@ class TrainingPlanExercise {
 
     public int getTarget() {
         return target;
+    }
+
+    public String getSuccessCriterion() {
+        return successCriterion;
     }
 }

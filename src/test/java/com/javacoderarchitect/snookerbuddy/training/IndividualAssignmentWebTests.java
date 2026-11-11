@@ -80,6 +80,7 @@ class IndividualAssignmentWebTests {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Pot cleanly.")))
                 .andExpect(content().string(containsString("15 / 20 default target")))
+                .andExpect(content().string(containsString("name=\"successCriteria[7]\"")))
                 .andReturn();
         var form = (CreateAssignmentCmd) response.getModelAndView().getModel().get("assignment");
         assertThat(form.exerciseIds()).containsExactly(7L);
@@ -131,8 +132,66 @@ class IndividualAssignmentWebTests {
     @Test
     void playerCannotIssueAssignmentsAndCsrfRemainsRequired() throws Exception {
         var player = new SecurityUser(2L, "Player", "player@example.com", "unused", Role.ROLE_PLAYER);
-        mvc.perform(assignment(SessionKind.INDEPENDENT).with(user(player))).andExpect(status().isForbidden());
+        mvc.perform(assignment(SessionKind.INDEPENDENT)
+                        .with(user(player))
+                        .param("successCriteria[7]", "Change the coach's criterion."))
+                .andExpect(status().isForbidden());
         mvc.perform(post("/training").with(user(coach()))).andExpect(status().isForbidden());
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void bindsDistinctCriteriaForEachSelectedExercise() throws Exception {
+        when(service.assign(eq(1L), any())).thenReturn(List.of(3L));
+        mvc.perform(post("/training")
+                        .with(user(coach()))
+                        .with(csrf())
+                        .param("playerId", "2")
+                        .param("format", "TRAINING_SESSION")
+                        .param("kind", "INDEPENDENT")
+                        .param("exerciseIds", "-1", "-2")
+                        .param("successCriteria[-1]", "  Pot with no cushion contact.  ")
+                        .param("successCriteria[-2]", "Leave the cue ball on the spot.")
+                        .param("successCriteria[-3]", " "))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/training/3"));
+        var cmd = ArgumentCaptor.forClass(CreateAssignmentCmd.class);
+        verify(service).assign(eq(1L), cmd.capture());
+        assertThat(cmd.getValue().successCriteria())
+                .containsExactlyInAnyOrderEntriesOf(
+                        java.util.Map.of(-1L, "Pot with no cushion contact.", -2L, "Leave the cue ball on the spot."));
+        assertThat(cmd.getValue().customTargets()).isFalse();
+    }
+
+    @Test
+    void rejectsWrittenCriteriaForUnselectedExercises() throws Exception {
+        choices();
+        mvc.perform(assignment(SessionKind.INDEPENDENT).param("successCriteria[8]", "Pot cleanly."))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Set a success criterion only for exercises included")));
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void rejectsWrittenCriteriaLongerThanTheLibraryLimit() throws Exception {
+        choices();
+        mvc.perform(assignment(SessionKind.INDEPENDENT).param("successCriteria[7]", "a".repeat(2001)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Success criterion must be at most 2000 characters")));
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void writtenOverrideDoesNotBypassNumericTargetValidation() throws Exception {
+        choices();
+        mvc.perform(assignment(SessionKind.INDEPENDENT)
+                        .param("customTargets", "true")
+                        .param("attempts", "10")
+                        .param("target", "11")
+                        .param("successCriteria[7]", "<Pot cleanly>"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Enter a success target between 1 and the total attempts")))
+                .andExpect(content().string(containsString("&lt;Pot cleanly&gt;")));
         verifyNoInteractions(service);
     }
 }

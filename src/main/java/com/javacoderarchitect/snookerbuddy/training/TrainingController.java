@@ -58,7 +58,7 @@ class TrainingController {
 
     @PostMapping
     String assign(
-            @Valid @ModelAttribute("assignment") CreateAssignmentCmd cmd,
+            @Valid @ModelAttribute(value = "assignment", binding = false) CreateAssignmentCmd cmd,
             BindingResult errors,
             Model model,
             RedirectAttributes redirect) {

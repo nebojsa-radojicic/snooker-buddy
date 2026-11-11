@@ -157,4 +157,54 @@ class AssignmentTargetPersistenceTests extends BaseIT {
                         ScoreDto::successful)
                 .containsExactlyInAnyOrder(tuple(plan.id(), -1L, 2L, 20, 14), tuple(plan.id(), -2L, 2L, 12, 9));
     }
+
+    @Test
+    void writtenAndNumericOverridesAreScopedToTheSelectedPlayerAndExercise() throws Exception {
+        transaction.executeWithoutResult(
+                status -> jdbc.update("insert into coach_players(coach_id, player_id) values (1, 5)"));
+        var defaultPlanId = service.assign(
+                        1L,
+                        new CreateAssignmentCmd(
+                                5L,
+                                "Defaults",
+                                AssignmentFormat.TRAINING_SESSION,
+                                SessionKind.INDEPENDENT,
+                                List.of(-1L, -2L),
+                                false,
+                                null,
+                                null))
+                .getFirst();
+        var coach = new SecurityUser(1L, "Coach", "coach@example.com", "unused", Role.ROLE_COACH);
+        var player = new SecurityUser(2L, "Player", "player@example.com", "unused", Role.ROLE_PLAYER);
+        var created = mockMvc.perform(post("/training")
+                        .with(user(coach))
+                        .with(csrf())
+                        .param("playerId", "2")
+                        .param("format", "TRAINING_SESSION")
+                        .param("kind", "INDEPENDENT")
+                        .param("exerciseIds", "-1", "-2")
+                        .param("customTargets", "true")
+                        .param("attempts", "30")
+                        .param("target", "22")
+                        .param("successCriteria[-1]", "Pot without touching a cushion.")
+                        .param("successCriteria[-2]", "Stop the white on the spot."))
+                .andExpect(status().is3xxRedirection())
+                .andReturn();
+        var location = created.getResponse().getRedirectedUrl();
+        mockMvc.perform(get(location + "/exercises/-1").with(user(player)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Pot without touching a cushion.")))
+                .andExpect(content().string(containsString("22 successful / 30 attempts")));
+        mockMvc.perform(get(location + "/exercises/-2").with(user(player)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Stop the white on the spot.")));
+
+        assertThat(service.plan(5L, defaultPlanId).exercises())
+                .extracting(ExerciseDto::id, ExerciseDto::goal, ExerciseDto::attempts, ExerciseDto::target)
+                .containsExactly(tuple(-1L, "Pot the red", 20, 15), tuple(-2L, "Stop the cue ball", 12, 9));
+        assertThat(jdbc.queryForObject("select goal from exercises where id = -1", String.class))
+                .isEqualTo("Pot the red");
+        assertThat(jdbc.queryForObject("select default_target from exercises where id = -1", Integer.class))
+                .isEqualTo(15);
+    }
 }

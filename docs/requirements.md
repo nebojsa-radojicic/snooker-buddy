@@ -19,7 +19,7 @@ The actors below are an identified coach and an identified player with an existi
 | UC-007 | Define Default Exercise Targets | COMPLETED |
 | UC-008 | Assign an Individual Exercise | COMPLETED |
 | UC-009 | Assign a Grouped Training Session | COMPLETED |
-| UC-010 | Personalize Targets for a Player | NOT_IMPLEMENTED |
+| UC-010 | Personalize Targets for a Player | COMPLETED |
 | UC-011 | Review Assigned Training | NOT_IMPLEMENTED |
 | UC-012 | Enforce Result Recording Ownership | NOT_IMPLEMENTED |
 | UC-013 | Record an Exercise Result as a Summary | NOT_IMPLEMENTED |
@@ -170,18 +170,20 @@ Implementation verification covers both joint and independent grouped assignment
 
 ### UC-010 — Personalize Targets for a Player
 
-- **Status:** NOT_IMPLEMENTED
+- **Status:** COMPLETED
 - **Depends On:** UC-008
 - **Description:** A coach retains default targets or adjusts attempts and success criteria for a particular player. The mockup shows a personalization option during assignment and carries the applicable targets into exercise and recording views.
 - **Acceptance Criteria:**
   - A coach can assign an exercise using its default attempts and success criteria.
   - A coach can adjust the planned attempts for the recipient player.
-  - A coach can adjust the success criteria for the recipient player.
+  - A coach can adjust the required number of successes and optionally override the written success criterion for each assigned exercise. A blank written override uses the library criterion.
   - Personalized targets are associated with that player's assigned exercise.
   - Personalizing a player's assignment does not change another player's targets or the exercise's library defaults.
   - The assigned exercise displays the applicable personalized targets instead of the defaults where overrides exist.
   - A target expressed as successful attempts cannot exceed the assigned total attempts.
   - Players cannot change the targets set by their coach through the assignment workflow.
+
+Implementation verification covers optional written overrides on individual and grouped assignments. Each nonblank criterion is stored with its assigned exercise and shown on the plan and exercise views. The form uses the library's 2,000-character limit and rejects overrides for unselected exercises. Tests cover binding distinct criteria, retained numeric validation, player access restrictions, and isolation from other assignments and library defaults. The local run passed 118 tests before Docker access blocked the database-backed cases. The user confirmed that the full local build finished with `BUILD SUCCESS`, completing database and migration verification.
 
 ### UC-011 — Review Assigned Training
 
@@ -279,7 +281,7 @@ The following mockup details are references for discussion, not additional accep
 | Difficulty and types | Easy/Medium/Hard and six example exercise types. | Confirm the final difficulty scale and shared type list, as requested by the PRD. |
 | Drawing uploads | JPG, PNG, and WebP; 20 MB input limit; automatic resizing and preview. | Confirm accepted formats, limits, image-quality expectations, and upload-failure behavior. The PRD requires a drawing photo but specifies none of these policies. |
 | Text and count limits | Name length and numeric limits are set in forms. | Confirm field limits, requiredness beyond the specified exercise content, matching rules for search, and the permitted attempt/target range. |
-| Assignment targets | One override applies to all selected exercises; otherwise each exercise uses its own default. | Confirm whether grouped sessions need independent per-exercise overrides and whether success criteria can be personalized as text as well as counts. |
+| Assignment targets | One override applies to all selected exercises; otherwise each exercise uses its own default. | Confirm whether grouped sessions need independent numeric overrides for each exercise. Written success criteria can be overridden per assigned exercise. |
 | Assignment selection | A player chooses a plan when an exercise belongs to several plans. | Confirm selection behavior and whether unassigned practice can be recorded. No standalone recording workflow is specified here. |
 | Completion | A plan becomes Completed once each included exercise has at least one result, regardless of target attainment; further results remain possible. | Define completion, partial work, repeated recording after completion, and whether actual attempts may differ from planned attempts. The PRD requires completed-work review but does not settle these transitions. |
 | Consecutive success and time | Optional best streak and duration in minutes; attempt mode calculates a streak. | Define these optional measures before adding normative use cases; the PRD explicitly leaves their definitions open. |

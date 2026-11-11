@@ -12,4 +12,16 @@
         custom.addEventListener('change', update);
         update();
     }
+
+    document.querySelectorAll('[data-assignment-exercise]').forEach(exercise => {
+        const selected = exercise.querySelector('input[type="checkbox"]');
+        const criterion = exercise.querySelector('details');
+        const input = criterion.querySelector('textarea');
+        const update = () => {
+            criterion.hidden = !selected.checked;
+            input.disabled = !selected.checked;
+        };
+        selected.addEventListener('change', update);
+        update();
+    });
 })();

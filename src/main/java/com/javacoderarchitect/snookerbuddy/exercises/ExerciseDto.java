@@ -35,6 +35,11 @@ public record ExerciseDto(
     }
 
     public ExerciseDto withTargets(int plannedAttempts, int successTarget) {
-        return new ExerciseDto(id, name, description, goal, difficulty, type, plannedAttempts, successTarget);
+        return withTargets(plannedAttempts, successTarget, goal);
+    }
+
+    public ExerciseDto withTargets(int plannedAttempts, int successTarget, String successCriterion) {
+        return new ExerciseDto(
+                id, name, description, successCriterion, difficulty, type, plannedAttempts, successTarget);
     }
 }
