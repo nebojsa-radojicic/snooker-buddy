@@ -3,6 +3,7 @@ package com.javacoderarchitect.snookerbuddy.training;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -206,5 +207,79 @@ class AssignmentTargetPersistenceTests extends BaseIT {
                 .isEqualTo("Pot the red");
         assertThat(jdbc.queryForObject("select default_target from exercises where id = -1", Integer.class))
                 .isEqualTo(15);
+    }
+
+    @Test
+    void assignedTrainingListsAndDetailsUseTheRightPlayerAndPlanTargets() throws Exception {
+        var individualId = service.assign(
+                        1L,
+                        new CreateAssignmentCmd(
+                                2L,
+                                "",
+                                AssignmentFormat.INDIVIDUAL_EXERCISES,
+                                SessionKind.INDEPENDENT,
+                                List.of(-1L),
+                                false,
+                                null,
+                                null))
+                .getFirst();
+        var groupedId = service.assign(
+                        1L,
+                        new CreateAssignmentCmd(
+                                2L,
+                                "Joint cue control",
+                                AssignmentFormat.TRAINING_SESSION,
+                                SessionKind.JOINT,
+                                List.of(-1L, -2L),
+                                true,
+                                30,
+                                22,
+                                java.util.Map.of(-1L, "Pot without touching a cushion.")))
+                .getFirst();
+        transaction.executeWithoutResult(status -> jdbc.update("""
+                insert into exercises(id, owner_id, name, description, goal, difficulty, type, drawing, drawing_content_type)
+                values (-8, 3, 'Other drill', 'Setup', 'Goal', 'EASY', 'TECHNIQUE', decode('00', 'hex'), 'image/jpeg')
+                """));
+        var otherId = service.assign(
+                        3L,
+                        new CreateAssignmentCmd(
+                                4L,
+                                "Other roster practice",
+                                AssignmentFormat.TRAINING_SESSION,
+                                SessionKind.INDEPENDENT,
+                                List.of(-8L),
+                                false,
+                                null,
+                                null))
+                .getFirst();
+
+        var coach = new SecurityUser(1L, "Coach", "coach@example.com", "unused", Role.ROLE_COACH);
+        var player = new SecurityUser(2L, "Player", "player@example.com", "unused", Role.ROLE_PLAYER);
+        for (var viewer : List.of(coach, player)) {
+            mockMvc.perform(get("/training").with(user(viewer)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(containsString("href=\"/training/" + individualId + "\"")))
+                    .andExpect(content().string(containsString("href=\"/training/" + groupedId + "\"")))
+                    .andExpect(content().string(not(containsString("Other roster practice"))));
+            mockMvc.perform(get("/training/" + otherId).with(user(viewer))).andExpect(status().isNotFound());
+        }
+
+        mockMvc.perform(get("/training/" + groupedId).with(user(player)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Demo User")))
+                .andExpect(content().string(containsString("Joint practice")))
+                .andExpect(content().string(containsString("Straight stop")));
+        mockMvc.perform(get("/training/" + individualId).with(user(player)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Demo User")))
+                .andExpect(content().string(containsString("Independent practice")));
+        mockMvc.perform(get("/training/" + individualId + "/exercises/-1").with(user(player)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("15 successful / 20 attempts")))
+                .andExpect(content().string(containsString("Pot the red")));
+        mockMvc.perform(get("/training/" + groupedId + "/exercises/-1").with(user(player)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("22 successful / 30 attempts")))
+                .andExpect(content().string(containsString("Pot without touching a cushion.")));
     }
 }

@@ -20,7 +20,7 @@ The actors below are an identified coach and an identified player with an existi
 | UC-008 | Assign an Individual Exercise | COMPLETED |
 | UC-009 | Assign a Grouped Training Session | COMPLETED |
 | UC-010 | Personalize Targets for a Player | COMPLETED |
-| UC-011 | Review Assigned Training | NOT_IMPLEMENTED |
+| UC-011 | Review Assigned Training | COMPLETED |
 | UC-012 | Enforce Result Recording Ownership | NOT_IMPLEMENTED |
 | UC-013 | Record an Exercise Result as a Summary | NOT_IMPLEMENTED |
 | UC-014 | Record an Exercise Result Attempt by Attempt | NOT_IMPLEMENTED |
@@ -187,7 +187,7 @@ Implementation verification covers optional written overrides on individual and 
 
 ### UC-011 — Review Assigned Training
 
-- **Status:** NOT_IMPLEMENTED
+- **Status:** COMPLETED
 - **Depends On:** UC-008, UC-009
 - **Description:** A player reviews their assignments before practice, and a coach reviews training prepared for associated players. The mockup's Training plans and My training views provide entry points to assignment details.
 - **Acceptance Criteria:**
@@ -197,6 +197,8 @@ Implementation verification covers optional written overrides on individual and 
   - The assignment makes each included exercise's instructions, drawing, goal, and applicable targets available.
   - If an exercise appears in multiple assignments, the assignment being reviewed determines which personalized targets are shown.
   - A player cannot retrieve another player's training through this workflow.
+
+Implementation verification covers the existing training list, plan details, and exercise views. Added regression coverage for coach and player review, roster isolation, and plan-specific targets and success criteria when the same exercise appears in multiple assignments. Thirteen focused unit and MVC checks passed in the agent environment. The user confirmed `BUILD SUCCESS` in their local environment, completing verification.
 
 ### UC-012 — Enforce Result Recording Ownership
 

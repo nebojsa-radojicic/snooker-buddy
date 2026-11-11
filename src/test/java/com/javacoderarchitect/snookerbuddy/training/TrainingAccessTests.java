@@ -3,6 +3,9 @@ package com.javacoderarchitect.snookerbuddy.training;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.javacoderarchitect.snookerbuddy.exercises.Difficulty;
+import com.javacoderarchitect.snookerbuddy.exercises.ExerciseDto;
+import com.javacoderarchitect.snookerbuddy.exercises.ExerciseType;
 import com.javacoderarchitect.snookerbuddy.exercises.ExercisesAPI;
 import com.javacoderarchitect.snookerbuddy.users.Role;
 import com.javacoderarchitect.snookerbuddy.users.UsersAPI;
@@ -105,5 +108,32 @@ class TrainingAccessTests {
         when(repository.findByCoachIdOrPlayerIdOrderByCreatedAtDescIdDesc(1L, 1L))
                 .thenReturn(List.of(plan));
         assertThat(service.plans(1L)).isEmpty();
+    }
+
+    @Test
+    void theSameExerciseUsesTheTargetsFromThePlanBeingReviewed() {
+        var personalized = new TrainingPlanEntity(
+                1L,
+                2L,
+                "Joint practice",
+                AssignmentFormat.INDIVIDUAL_EXERCISES,
+                SessionKind.JOINT,
+                List.of(new TrainingPlanExercise(7L, 20, 15, "Pot without touching a cushion.")));
+        when(repository.findById(3L)).thenReturn(Optional.of(plan));
+        when(repository.findById(4L)).thenReturn(Optional.of(personalized));
+        when(users.hasRole(2L, Role.ROLE_PLAYER)).thenReturn(true);
+        when(exercises.selected(1L, List.of(7L)))
+                .thenReturn(List.of(
+                        new ExerciseDto(7L, "Pot", "Setup", "Pot the red", Difficulty.EASY, ExerciseType.TECHNIQUE)));
+
+        var first = service.exercise(2L, 3L, 7L);
+        assertThat(first.attempts()).isEqualTo(10);
+        assertThat(first.target()).isEqualTo(8);
+        assertThat(first.goal()).isEqualTo("Pot the red");
+
+        var second = service.exercise(2L, 4L, 7L);
+        assertThat(second.attempts()).isEqualTo(20);
+        assertThat(second.target()).isEqualTo(15);
+        assertThat(second.goal()).isEqualTo("Pot without touching a cushion.");
     }
 }
