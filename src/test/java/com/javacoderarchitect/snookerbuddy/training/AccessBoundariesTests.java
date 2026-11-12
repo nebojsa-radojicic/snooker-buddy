@@ -2,6 +2,7 @@ package com.javacoderarchitect.snookerbuddy.training;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -347,6 +348,37 @@ class AccessBoundariesTests extends BaseIT {
         mvc.perform(get("/scores").param("playerId", "5").with(user(account(4, Role.ROLE_PLAYER))))
                 .andExpect(status().isForbidden());
         assertThat(scores.scores(1L)).containsExactlyElementsOf(before);
+    }
+
+    @Test
+    void recordingTheSameAssignedExerciseAgainPreservesEachPerformance() throws Exception {
+        var coach = account(1, Role.ROLE_COACH);
+        var player = account(2, Role.ROLE_PLAYER);
+        Long repeatedPlan = plan(2L, SessionKind.INDEPENDENT);
+        var first = scores.save(2L, repeatedPlan, -1L, new CreateScoreCmd(10, 6));
+        var second = scores.save(2L, repeatedPlan, -1L, new CreateScoreCmd(12, 9));
+        players.add(1L, "newplayer@example.com");
+        Long otherPlan = plan(5L, SessionKind.JOINT);
+        var other = scores.save(1L, otherPlan, -1L, new CreateScoreCmd(5, 2));
+
+        assertThat(List.of(first.id(), second.id(), other.id())).doesNotHaveDuplicates();
+        assertThat(scores.scores(1L))
+                .extracting(
+                        ScoreDto::id, ScoreDto::playerId, ScoreDto::exerciseId, ScoreDto::successful, ScoreDto::total)
+                .containsExactly(
+                        tuple(other.id(), 5L, -1L, 2, 5),
+                        tuple(second.id(), 2L, -1L, 9, 12),
+                        tuple(first.id(), 2L, -1L, 6, 10));
+        for (var request : List.of(
+                get("/scores").param("playerId", "2").with(user(coach)),
+                get("/scores").with(user(player)))) {
+            mvc.perform(request)
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(containsString(">9 / 12<")))
+                    .andExpect(content().string(containsString(">6 / 10<")))
+                    .andExpect(content().string(not(containsString(">2 / 5<"))));
+        }
+        mvc.perform(get("/scores/" + other.id()).with(user(player))).andExpect(status().isNotFound());
     }
 
     @ParameterizedTest

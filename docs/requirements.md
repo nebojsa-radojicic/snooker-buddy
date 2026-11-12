@@ -25,7 +25,7 @@ The actors below are an identified coach and an identified player with an existi
 | UC-013 | Record an Exercise Result as a Summary | COMPLETED |
 | UC-014 | Record an Exercise Result Attempt by Attempt | COMPLETED |
 | UC-015 | Review Completed Training and Results | COMPLETED |
-| UC-016 | Review Separate Performances of a Repeated Exercise | NOT_IMPLEMENTED |
+| UC-016 | Review Separate Performances of a Repeated Exercise | COMPLETED |
 
 ## Detailed Use Cases
 
@@ -272,7 +272,7 @@ Training history shows saved performances from both recording modes. A coach can
 
 ### UC-016 — Review Separate Performances of a Repeated Exercise
 
-- **Status:** NOT_IMPLEMENTED
+- **Status:** COMPLETED
 - **Depends On:** UC-015
 - **Description:** A coach or player reviews multiple performances of the same exercise to understand performance over repeated practice. The mockup preserves repeated results as separate history entries.
 - **Acceptance Criteria:**
@@ -281,6 +281,8 @@ Training history shows saved performances from both recording modes. A coach can
   - Authorized viewers can inspect the successful and total attempts for each performance of the same exercise.
   - Results from different players are not conflated as one player's repeated performance.
   - Reviewing repeated exercise results does not infer validated overall playing ability or automatic skill-level advancement.
+
+The existing result workflow stores each performance with its own score ID and displays each score in its own history row. Regression tests cover repeated saves for the same assigned exercise, preservation of the earlier counts, and separation of results for different players. All 42 focused tests passed in the agent environment. The user confirmed that their full local build finished with `BUILD SUCCESS`, completing verification.
 
 ## Open Decisions and Mockup Alignment
 

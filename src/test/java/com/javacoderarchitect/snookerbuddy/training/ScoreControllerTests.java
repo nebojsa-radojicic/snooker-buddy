@@ -1,6 +1,7 @@
 package com.javacoderarchitect.snookerbuddy.training;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
@@ -169,6 +170,27 @@ class ScoreControllerTests {
                 .andExpect(jsonPath("$.exerciseId").value(7))
                 .andExpect(jsonPath("$.kind").value("INDEPENDENT"))
                 .andExpect(header().string("Cache-Control", "no-store"));
+    }
+
+    @Test
+    void rendersOneHistoryRowPerPerformanceOfTheSameExercise() throws Exception {
+        var later = new ScoreDto(
+                10L,
+                3L,
+                7L,
+                2L,
+                "Player",
+                "Pot",
+                SessionKind.INDEPENDENT,
+                12,
+                9,
+                Instant.parse("2026-11-08T12:00:00Z"));
+        when(service.scores(2L)).thenReturn(List.of(later, score()));
+        mvc.perform(get("/scores").with(user(player())))
+                .andExpect(status().isOk())
+                .andExpect(content()
+                        .string(matchesPattern("(?s).*<tr>\\s*<td>Player</td>.*?>Pot</a>.*?<td>9 / 12</td>.*?</tr>"
+                                + "\\s*<tr>\\s*<td>Player</td>.*?>Pot</a>.*?<td>8 / 10</td>.*?</tr>.*")));
     }
 
     @Test
